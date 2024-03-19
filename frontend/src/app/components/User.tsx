@@ -1,0 +1,290 @@
+import React from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faEdit, faTrash, faEye } from '@fortawesome/free-solid-svg-icons'
+import { useState } from 'react';
+import UserAccessories from './UserAccessories';
+
+interface UserProps {
+    id: string;
+    workday_id: string;
+    nombre: string | null;
+    apellido: string | null;
+    mail: string | null;
+    usuario: string | null;
+    marca: string | null;
+    modelo: string | null;
+    serie: string | null;
+    creacion: string | null;
+    modificacion: string | null;
+    win11_installed: boolean | null;
+}
+
+const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, marca, modelo, serie, creacion, modificacion, win11_installed }) => {
+    const [showModal, setShowModal] = useState(false);
+    const [editMode, setEditMode] = useState(false);
+    const [showAccessories, setShowAccessories] = useState(false);
+    const [arrowDirection, setArrowDirection] = useState('right');
+    const [editedUser, setEditedUser] = useState<UserProps>({
+        id,
+        nombre,
+        apellido,
+        mail,
+        usuario,
+        marca,
+        modelo,
+        serie,
+        workday_id: workday_id,
+        creacion,
+        modificacion,
+        win11_installed
+    });
+
+    const handleOpenModal = () => {
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+        setShowAccessories(false);
+        setEditMode(false);
+    };
+
+    const handleEditUser = () => {
+        setEditMode(true);
+        setShowAccessories(false);
+    };
+
+    const handleToggleAccessories = () => {
+        setShowAccessories(!showAccessories);
+        setArrowDirection(arrowDirection === 'right' ? 'down' : 'right');
+    };
+
+    const handleCancelEdit = () => {
+        setEditedUser({
+            id,
+            nombre,
+            apellido,
+            mail,
+            usuario,
+            marca,
+            modelo,
+            serie,
+            workday_id: workday_id,
+            creacion,
+            modificacion,
+            win11_installed
+        });
+        setEditMode(false);
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { id, value } = e.target;
+        setEditedUser((prevState) => ({
+            ...prevState,
+            [id]: value,
+        }));
+    };
+
+    const handleDeleteUser = () => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+        if (confirmDelete) {
+            // Send API request to delete user with user.id
+            // Replace `API_ENDPOINT` with the actual API endpoint
+            fetch(`http://localhost:8010/api/v1.0/users/${id}`, {
+                method: 'DELETE',
+            }).then(() => {
+                // Reload the page
+                window.location.reload();
+            })
+        }
+    };
+
+    const handleSaveUser = () => {
+        const url = `http://localhost:8010/api/v1.0/users/${id}`;
+        fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(editedUser), // Datos a enviar en la petición
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error al guardar el usuario');
+                }
+                // Puedes hacer algo después de guardar exitosamente, como mostrar un mensaje al usuario
+                console.log('Usuario guardado exitosamente');
+                setEditMode(false); // Salir del modo de edición
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+    };
+
+    return (
+        <div className="bg-gray-800 p-4 rounded-lg shadow-md text-white" key={id}>
+            <h2 className="text-2xl font-bold mb-4">{nombre} {apellido}</h2>
+            <p className="text-lg">Name: {nombre}</p>
+            <p className="text-lg">Last Name: {apellido}</p>
+            <p className="text-lg">Email: {mail}</p>
+            <p className="text-lg">Username: {usuario}</p>
+            <div className="flex justify-end mt-4">
+                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-2 rounded" onClick={handleDeleteUser}>
+                    <FontAwesomeIcon icon={faTrash} />
+                </button>
+                <button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" onClick={handleOpenModal}>
+                    <FontAwesomeIcon icon={faEye} />
+                </button>
+            </div>
+            {showModal && (
+                <div className="fixed inset-0 flex items-center justify-center z-50">
+                    <div className="absolute inset-0 bg-gray-900 opacity-75" onClick={handleCloseModal}></div>
+                    {editMode && (
+                        <div className="bg-white p-4 rounded-lg shadow-md animate-fade-in relative z-10 w-auto h-auto max-w-2xl">
+                            <h2 className="text-2xl font-bold mb-4 text-black">Edit User</h2>
+                            <form className="space-y-4 grid grid-cols-2 gap-4 w-full h-auto max-w-2xl text-black p-4">
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="nombre">
+                                        Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="nombre"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Name"
+                                        value={editedUser.nombre || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="apellido">
+                                        Last Name
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="apellido"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Last Name"
+                                        value={editedUser.apellido || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="mail">
+                                        Email
+                                    </label>
+                                    <input
+                                        type="email"
+                                        id="mail"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Email"
+                                        value={editedUser.mail || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="usuario">
+                                        Username
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="usuario"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Username"
+                                        value={editedUser.usuario || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="marca">
+                                        Marca
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="marca"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Marca"
+                                        value={editedUser.marca || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="modelo">
+                                        Modelo
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="modelo"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Modelo"
+                                        value={editedUser.modelo || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                                <div className="mb-4">
+                                    <label className="block text-sm font-bold mb-2" htmlFor="serie">
+                                        Serie
+                                    </label>
+                                    <input
+                                        type="text"
+                                        id="serie"
+                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                        placeholder="Serie"
+                                        value={editedUser.serie || ''}
+                                        onChange={handleChange}
+                                    />
+                                </div>
+                            </form>
+                            <hr className="my-4" />
+                            <div className="flex justify-end">
+                                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCancelEdit}>
+                                    Cancel
+                                </button>
+                                <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handleSaveUser}>
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    ) || (
+                            <div className="animate-fade-in relative z-10 grid grid-cols-[auto,auto,auto] gap-4 w-full h-auto max-w-6xl items-center">
+                                <div className="flex justify-start mb-4 bg-white p-4 rounded-lg shadow-md animate-fade-in relative min-h-full">
+                                    <div className="flex flex-col w-full h-auto max-w-2xl text-black p-4">
+                                        <h2 className="text-2xl font-bold mb-4 text-black">{nombre} {apellido}</h2>
+                                        <p className="text-lg text-black"><span className='font-bold'>Workday ID:</span> {workday_id}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Email:</span> {mail}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Username:</span> {usuario}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Marca:</span> {marca}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Modelo:</span> {modelo}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Serie:</span> {serie}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Creacion:</span> {creacion}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Modificacion:</span> {modificacion}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Win11 Installed:</span> {win11_installed ? "Yes" : "No"}</p>
+                                        <div className="flex justify-end">
+                                            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCloseModal}>
+                                                Close
+                                            </button>
+                                            <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handleEditUser}>
+                                                <FontAwesomeIcon icon={faEdit} />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col w-auto h-auto p-4 max-w-fit">
+                                    <button className="top-0 right-0 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-3" onClick={handleToggleAccessories}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 transform transition-transform duration-300 ${arrowDirection === 'left' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                                        </svg>
+                                    </button>
+                                </div>
+                                {showAccessories && <UserAccessories workdayId={workday_id} />}
+
+                            </div>
+                        )}
+                </div>
+            )}
+        </div>
+    );
+};
+
+export default User;
