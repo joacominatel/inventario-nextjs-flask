@@ -4,6 +4,7 @@ import { faEdit, faTrash, faEye, faArrowRight, faArrowLeft } from '@fortawesome/
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import UserAccessories from './UserAccessories';
+import axios from 'axios';
 
 interface UserProps {
     id: string;
@@ -102,22 +103,18 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
     const handleSaveUser = () => {
         const url = `http://localhost:8010/api/v1.0/users/${id}`;
-        fetch(url, {
-            method: 'PUT',
+        axios.put(url, editedUser, {
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify(editedUser), // Datos a enviar en la petición
         })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error('Error al guardar el usuario');
-                }
-                // Puedes hacer algo después de guardar exitosamente, como mostrar un mensaje al usuario
-                console.log('Usuario guardado exitosamente');
-                setEditMode(false); // Salir del modo de edición
+                // Handle successful response
+                console.log(response.data);
+                window.location.reload();
             })
             .catch(error => {
+                // Handle error
                 console.error('Error:', error);
             });
     };
