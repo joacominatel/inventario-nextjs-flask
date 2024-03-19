@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import AddAccessoryForm from "./AddAccessoryForm";
 import Accesorio from "./Accesorio";
+import { motion } from "framer-motion";
 
 interface UserAccessories {
     id: string;
@@ -66,20 +67,33 @@ const UserAccessories: React.FC<UserAccessoriesProps> = ({ workdayId }) => {
     }
 
     return (
-        <div className="text-black bg-white p-5 rounded-lg h-auto shadow-lg min-h-full">
+        <motion.div 
+            className="text-black bg-white p-5 rounded-lg h-auto shadow-lg min-h-full"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+        >
             <h2 className="text-center font-bold">User Accessories</h2>
             <div className="grid grid-cols-2 gap-4 mt-5">
                 {accessories.map((accessory) => (
                     <Accesorio key={accessory.id} id={accessory.id} accesorio={accessory.accesorio} detalle={accessory.detalle} ticket={accessory.ticket} cantidad={accessory.cantidad} />
                 ))}
             </div>
-            <div className="text-center mt-5">
-                <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleAddAccessoryFormVisible}>
+            <motion.div className="text-center mt-5"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            >
+                <motion.button 
+                className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleAddAccessoryFormVisible}
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.9 }}
+                >
                     Add Accessory
-                </button>
-            </div>
+                </motion.button>
+            </motion.div>
             {addAccessoryFormVisible && <AddAccessoryForm workdayId={workdayId} />}
-        </div>
+        </motion.div>
     );
 };
 

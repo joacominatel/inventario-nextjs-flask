@@ -1,7 +1,8 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrash, faEye } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faTrash, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import UserAccessories from './UserAccessories';
 
 interface UserProps {
@@ -129,15 +130,21 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             <p className="text-lg">Email: {mail}</p>
             <p className="text-lg">Username: {usuario}</p>
             <div className="flex justify-end mt-4">
-                <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-2 rounded" onClick={handleDeleteUser}>
+                <motion.button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 mr-2 rounded" onClick={handleDeleteUser}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                >
                     <FontAwesomeIcon icon={faTrash} />
-                </button>
-                <button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" onClick={handleOpenModal}>
+                </motion.button>
+                <motion.button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" onClick={handleOpenModal}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                >
                     <FontAwesomeIcon icon={faEye} />
-                </button>
+                </motion.button>
             </div>
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center z-50">
+                <div className="fixed inset-0 flex items-center justify-center z-50 flex-row">
                     <div className="absolute inset-0 bg-gray-900 opacity-75" onClick={handleCloseModal}></div>
                     {editMode && (
                         <div className="bg-white p-4 rounded-lg shadow-md animate-fade-in relative z-10 w-auto h-auto max-w-2xl">
@@ -246,8 +253,13 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                             </div>
                         </div>
                     ) || (
-                            <div className="animate-fade-in relative z-10 grid grid-cols-[auto,auto,auto] gap-4 w-full h-auto max-w-6xl items-center">
-                                <div className="flex justify-start mb-4 bg-white p-4 rounded-lg shadow-md animate-fade-in relative min-h-full">
+                            <motion.div 
+                                className="animate-fade-in relative z-10 flex flex-row gap-4 w-full h-auto max-w-full items-center justify-center"
+                                initial={{ x: '-100%' }}
+                                animate={{ x: 0 }}
+                                transition={{ type: 'tween', stiffness: 120, duration: 0.35 }}
+                            >
+                                <div className="flex justify-start mb-4 bg-white p-4 rounded-lg shadow-md animate-fade-in relative min-h-full mg-4">
                                     <div className="flex flex-col w-full h-auto max-w-2xl text-black p-4">
                                         <h2 className="text-2xl font-bold mb-4 text-black">{nombre} {apellido}</h2>
                                         <p className="text-lg text-black"><span className='font-bold'>Workday ID:</span> {workday_id}</p>
@@ -260,26 +272,35 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         <p className="text-lg text-black"><span className='font-bold'>Modificacion:</span> {modificacion}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Win11 Installed:</span> {win11_installed ? "Yes" : "No"}</p>
                                         <div className="flex justify-end">
-                                            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCloseModal}>
+                                            <motion.button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCloseModal}
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                            >
                                                 Close
-                                            </button>
-                                            <button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handleEditUser}>
+                                            </motion.button>
+                                            <motion.button className="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handleEditUser}
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                            >
                                                 <FontAwesomeIcon icon={faEdit} />
-                                            </button>
+                                            </motion.button>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div className="flex flex-col w-auto h-auto p-4 max-w-fit">
-                                    <button className="top-0 right-0 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-3" onClick={handleToggleAccessories}>
-                                        <svg xmlns="http://www.w3.org/2000/svg" className={`h-6 w-6 transform transition-transform duration-300 ${arrowDirection === 'left' ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                                        </svg>
-                                    </button>
+                                <div className="flex flex-row w-auto h-auto p-4 max-w-fit max-h-fit">
+                                    <motion.button
+                                        className="top-0 right-0 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded m-3"
+                                        onClick={handleToggleAccessories}
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                    >
+                                        <FontAwesomeIcon icon={arrowDirection === 'right' ? faArrowRight : faArrowLeft} />
+                                    </motion.button>
                                 </div>
-                                {showAccessories && <UserAccessories workdayId={workday_id} />}
 
-                            </div>
+                                {showAccessories && <UserAccessories workdayId={workday_id} />}
+                            </motion.div>
                         )}
                 </div>
             )}
