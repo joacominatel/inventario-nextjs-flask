@@ -146,7 +146,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                     {editMode && (
                         <div className="bg-white p-4 rounded-lg shadow-md animate-fade-in relative z-10 w-auto h-auto max-w-2xl">
                             <h2 className="text-2xl font-bold mb-4 text-black">Edit User</h2>
-                            <form className="space-y-4 grid grid-cols-2 gap-4 w-full h-auto max-w-2xl text-black p-4">
+                            <form className="grid grid-cols-2 gap-4 text-black p-4 border-0">
                                 <div className="mb-4">
                                     <label className="block text-sm font-bold mb-2" htmlFor="nombre">
                                         Name
@@ -292,7 +292,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         whileHover={{ scale: 1.1 }}
                                         whileTap={{ scale: 0.9 }}
                                     >
-                                        <FontAwesomeIcon icon={arrowDirection === 'right' ? faArrowRight : faArrowLeft} />
+                                        <FontAwesomeIcon icon={arrowDirection === 'right' ? faArrowLeft : faArrowRight} />
                                     </motion.button>
                                 </div>
 

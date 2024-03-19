@@ -54,7 +54,7 @@ const UserAccessories: React.FC<UserAccessoriesProps> = ({ workdayId }) => {
 
     if (!Array.isArray(accessories) || accessories.length === 0) {
         return (
-            <div className="text-black bg-white p-5 rounded-lg h-auto shadow-lg min-h-full">
+            <div className="text-black bg-white p-5 rounded-lg h-auto shadow-lg min-h-full min-w-96">
                 <h2 className="text-center font-bold">User Accessories</h2>
                 <div className="text-center mt-5">
                     <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleAddAccessoryFormVisible}>
