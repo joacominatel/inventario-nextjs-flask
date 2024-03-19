@@ -34,14 +34,14 @@ python -m venv venv
 .\venv\Scripts\activate
 ```
 
-<h2>Instalación de Dependencias de Python</h2>
+<h3>Instalación de Dependencias de Python</h3>
 
 ```
 cd backend/
 pip install -r requirements.txt
 ```
 
-<h2>Ejecución de la Aplicación Flask</h2>
+<h3>Ejecución de la Aplicación Flask</h3>
 
 ```
 cd backend/
@@ -67,7 +67,7 @@ npm run dev
 ```
 
 El servidor de desarrollo de Next.js estará disponible en http://localhost:3000.
-<h2>Build de Next.js para Implementación</h2>
+<h3>Build de Next.js para Implementación</h3>
 
 ```
 cd frontend/
