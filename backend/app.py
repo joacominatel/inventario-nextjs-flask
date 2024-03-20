@@ -82,11 +82,29 @@ def create_user():
 def delete_user(id):
     try:
         user = Users.query.get(id)
+
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        nombre = user.nombre
+
+        # get accessories
+        try:
+            accessories = Accessories.query.filter_by(workday_id=user.workday_id).all()
+            for accessory in accessories:
+                db.session.delete(accessory)
+                db.session.commit()
+        except:
+            db.session.rollback()
+            return jsonify({'message': 'Error al eliminar los accesorios del usuario'}), 500
+
         db.session.delete(user)
         db.session.commit()
-        return jsonify(user.serialize())
-    except:
-        return jsonify({'message': 'Error al eliminar el usuario'})
+
+        return jsonify(f'Usuario {nombre} eliminado')
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error al eliminar el usuario', 'error': str(e)})
 
 @app.route('/api/v1.0/users/<int:id>', methods=['PUT'])
 def update_user(id):

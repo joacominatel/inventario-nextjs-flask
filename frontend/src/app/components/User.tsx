@@ -89,15 +89,19 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
     const handleDeleteUser = () => {
         const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+        
         if (confirmDelete) {
-            // Send API request to delete user with user.id
-            // Replace `API_ENDPOINT` with the actual API endpoint
-            fetch(`http://localhost:8010/api/v1.0/users/${id}`, {
-                method: 'DELETE',
-            }).then(() => {
-                // Reload the page
-                window.location.reload();
-            })
+            const url = `http://localhost:8010/api/v1.0/users/${id}`;
+            const response = axios.delete(url)
+                .then(response => {
+                    console.log(response.data);
+                    alert(response.data || 'User deleted successfully');
+                })  
+                .catch(e => {
+                    // Handle error
+                    console.error('Error:', e);
+                    alert('Error deleting user');
+                });
         }
     };
 
