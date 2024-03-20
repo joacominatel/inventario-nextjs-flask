@@ -2,6 +2,7 @@ flask
 flask-sqlalchemy
 flask-migrate
 flask-login
+Flask-Cors
 flask-wtf
 werkzeug
 python-dotenv

@@ -7,7 +7,7 @@ Configuración del Entorno
 
     1. Asegúrate de tener PostgreSQL instalado en tu máquina. Puedes descargarlo desde el sitio oficial de PostgreSQL.
 
-    2. Crea una base de datos en PostgreSQL con el nombre inventario.
+    2. Crea una base de datos en PostgreSQL con el nombre `inventario`.
 
     3. Crea un archivo .env en la carpeta backend/ y configura las variables de entorno como sigue:
 

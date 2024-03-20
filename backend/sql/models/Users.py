@@ -14,7 +14,7 @@ class Users(db.Model):
     marca = db.Column(db.String(100), nullable=False)
     modelo = db.Column(db.String(100), nullable=False)
     serie = db.Column(db.String(100), nullable=False)
-    mail = db.Column(db.String(100), unique=True, nullable=False)
+    mail = db.Column(db.String(100), nullable=False)
     usuario = db.Column(db.String(100), unique=True, nullable=False)
     win11_installed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())

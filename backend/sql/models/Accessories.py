@@ -15,8 +15,8 @@ class Accessories(db.Model):
     workday_id = db.Column(db.String(10), db.ForeignKey('usuarios.workday_id'), nullable=False)
     accesorio = db.Column(db.String(100), nullable=False)
     detalle = db.Column(db.String(100), nullable=True)
-    cantidad = db.Column(db.Integer, nullable=False, default=1)
-    ticket = db.Column(db.String(100), nullable=False, default='No tiene')
+    cantidad = db.Column(db.Integer, nullable=True, default=1)
+    ticket = db.Column(db.String(100), nullable=True, default='No tiene')
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
 
