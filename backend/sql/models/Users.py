@@ -36,6 +36,7 @@ class Users(db.Model):
             'mail': self.mail,
             'usuario': self.usuario,
             'win11_installed': self.win11_installed,
+            'is_active': self.is_active,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }

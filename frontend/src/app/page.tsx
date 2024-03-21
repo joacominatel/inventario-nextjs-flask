@@ -7,6 +7,7 @@ import axios from "axios";
 export default function Home() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<usersData[]>([]);
+  const [searchActive, setSearchActive] = useState(true);
 
   // Explicitly type the users state as an array of objects with specific properties
   interface usersData {
@@ -21,6 +22,7 @@ export default function Home() {
     usuario: string,
     created_at: string,
     updated_at: string,
+    is_active: boolean,
     win11_installed: boolean
   }
 
@@ -37,7 +39,7 @@ export default function Home() {
         }
 
         // url /api/v1.0/users/<string>
-        const response = await axios.get(`http://localhost:8010/api/v1.0/users/${search}`);
+        const response = await axios.get(`http://localhost:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${search}`);
         const data = response.data;
 
         const initialUsersData: usersData[] = [];
@@ -62,19 +64,18 @@ export default function Home() {
             usuario: user.usuario,
             created_at: user.created_at,
             updated_at: user.updated_at,
+            is_active: user.is_active,
             win11_installed: user.win11_installed
           });
-
-          console.log(user.id);
         });
-
+        console.log(initialUsersData);
         setUsers(initialUsersData);
 
       } catch (error) {
         console.error(error);
       }
     };
-  
+
     fetchData();
   }, [search]);
 
@@ -82,7 +83,7 @@ export default function Home() {
     // Add a search bar to the page
     <section className="container mx-auto">
       <div className="text-center mt-4 space-y-4">
-        <form>
+        <form className="flex flex-row items-center justify-center space-x-4">
           <input
             type="text"
             value={search}
@@ -91,6 +92,20 @@ export default function Home() {
             className="w-full p-4 rounded-lg shadow-md bg-gray-800 text-white focus:outline-none focus:ring focus:border-blue-300"
             placeholder="Buscar usuario por nombre, apellido, correo"
           />
+          {/* checkbox to search on activated users or deactivated users */}
+          <div className="flex justify-center items-center">
+            <label htmlFor="searchActive" className="relative inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                id="searchActive"
+                checked={searchActive}
+                onChange={() => setSearchActive(!searchActive)}
+                className="sr-only peer checked:bg-blue-500 checked:border-blue-500 checked:text-white checked:justify-end"
+              />
+              <div className="peer rounded-br-2xl rounded-tl-2xl outline-none duration-100 after:duration-500 w-28 h-14 bg-blue-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500  after:content-['No'] after:absolute after:outline-none after:rounded-br-xl after:rounded-tl-xl after:h-12 after:w-12 after:bg-white after:top-1 after:left-1 after:flex after:justify-center after:items-center  after:text-sky-800 after:font-bold peer-checked:after:translate-x-14 peer-checked:after:content-['Yes'] peer-checked:after:border-white">
+              </div>
+            </label>
+          </div>
         </form>
       </div>
       <div className="mt-4" id="users">
@@ -101,7 +116,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
-            {users.map((user: { id: string, workday_id: string, nombre: string, apellido: string, mail: string, usuario: string, marca: string, modelo: string, serie: string, created_at: string, updated_at: string, win11_installed: boolean }) => (
+            {users.map((user: { id: string, workday_id: string, nombre: string, apellido: string, mail: string, usuario: string, marca: string, modelo: string, serie: string, created_at: string, updated_at: string, win11_installed: boolean, is_active: boolean }) => (
               <User
                 id={user.id}
                 workday_id={user.workday_id}
@@ -114,6 +129,7 @@ export default function Home() {
                 serie={user.serie}
                 creacion={user.created_at}
                 modificacion={user.updated_at}
+                is_active={user.is_active}
                 win11_installed={user.win11_installed}
               />
             ))}

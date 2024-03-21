@@ -54,10 +54,28 @@ def search_user(nombre):
 
         if len(users) == 0:
             return jsonify({'message': 'Usuario no encontrado'})
+        
+        return jsonify([user.serialize() for user in users])
+    except:
+        return jsonify({'message': 'Error al obtener los usuarios'})
+    
+@app.route('/api/v1.0/usersDisabled/<string:nombre>', methods=['GET'])
+def search_user_disabled(nombre):
+    try:
+        nombre = nombre.capitalize()
+        users = Users.query.filter(and_(or_(
+            Users.nombre.like(f'{nombre}%'),
+            Users.apellido.like(f'{nombre}%'),
+            Users.mail.like(f'{nombre}%')
+        ), Users.is_active == False)).all()
+
+        if len(users) == 0:
+            return jsonify({'message': 'Usuario no encontrado'})
 
         return jsonify([user.serialize() for user in users])
     except:
         return jsonify({'message': 'Error al obtener los usuarios'})
+
     
 @app.route('/api/v1.0/users/<int:id>', methods=['GET'])
 def user(id):
@@ -78,13 +96,16 @@ def create_user():
     except:
         return jsonify({'message': 'Error al crear el usuario'})    
     
-@app.route('/api/v1.0/users/<int:id>', methods=['POST'])
+@app.route('/api/v1.0/userDeactivate/<int:id>', methods=['POST'])
 def deactivate_user(id):
     try:
         user = Users.query.get(id)
 
         if not user:
             return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        if user.is_active == False:
+            return jsonify({'message': 'El usuario ya se encuentra desactivado'}), 400
         
         nombre = user.nombre
 
@@ -98,10 +119,28 @@ def deactivate_user(id):
             return jsonify({'message': 'Error al eliminar los accesorios'})
         
         user.is_active = False
+        user.updated_at = func.now()
         db.session.commit()
         return jsonify({'message': f'Usuario {nombre} desactivado'})
     except:
         return jsonify({'message': 'Error al desactivar el usuario'})
+    
+@app.route('/api/v1.0/userActivate/<int:id>', methods=['POST'])
+def activate_user(id):
+    try:
+        user = Users.query.get(id)
+
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        nombre = user.nombre
+
+        user.is_active = True
+        user.updated_at = func.now()
+        db.session.commit()
+        return jsonify({'message': f'Usuario {nombre} activado'})
+    except:
+        return jsonify({'message': 'Error al activar el usuario'})
 
 @app.route('/api/v1.0/users/<int:id>', methods=['PUT'])
 def update_user(id):

@@ -1,6 +1,6 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faLock, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import UserAccessories from './UserAccessories';
@@ -19,10 +19,11 @@ interface UserProps {
     serie: string | null;
     creacion: string | null;
     modificacion: string | null;
+    is_active: boolean | null;
     win11_installed: boolean | null;
 }
 
-const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, marca, modelo, serie, creacion, modificacion, win11_installed }) => {
+const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, marca, modelo, serie, creacion, modificacion, win11_installed, is_active }) => {
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [showAccessories, setShowAccessories] = useState(false);
@@ -39,6 +40,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         workday_id: workday_id,
         creacion,
         modificacion,
+        is_active,
         win11_installed
     });
 
@@ -75,6 +77,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             workday_id: workday_id,
             creacion,
             modificacion,
+            is_active,
             win11_installed
         });
         setEditMode(false);
@@ -91,30 +94,36 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const handleDeleteUser = () => {
         const confirmDelete = Swal.fire({
             title: 'Estas seguro?',
-            text: `Usuario: ${nombre} ${apellido} sera desactivado`,
+            text: `${nombre} ${apellido} ${is_active ? 'sera desactivado' : 'sera activado'}`,
             icon: 'warning',
+            input: 'password',
+            inputPlaceholder: 'Ingrese contraseña de admin',
             showCancelButton: true,
-            confirmButtonText: 'Desactivar!',
+            confirmButtonText: `${is_active ? 'Si, desactivar!' : 'Si, activar!'}`,
             cancelButtonText: 'No, cancelar!',
             reverseButtons: true
         }).then((result) => {
-            if (result.isConfirmed) {
+            if (result.isConfirmed && result.value === 'admin1234') {
+                Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
                 return true;
-            } else if (result.dismiss === Swal.DismissReason.cancel) {
+            } else if (result.isConfirmed && result.value !== 'admin1234') {
+                Swal.fire('Error', 'Contraseña incorrecta', 'error');
+                return false;
+            } else {
                 return false;
             }
         });
-        
+
         confirmDelete.then((result) => {
             if (result) {
-                const url = `http://localhost:8010/api/v1.0/users/${id}`;
+                const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
                 axios.post(url, {
                     headers: {
                         'Content-Type': 'application/json',
                     },
                 })
                     .then(response => {
-                        // Handle successful response
+                        // Handle success`ful response
                         console.log(response.data);
                     })
                     .catch(error => {
@@ -155,7 +164,13 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                 >
-                    <FontAwesomeIcon icon={faLock} />
+                    {
+                        is_active ? (
+                            <FontAwesomeIcon icon={faLock} />
+                        ) : (
+                            <FontAwesomeIcon icon={faLockOpen} />
+                        )
+                    }
                 </motion.button>
                 <motion.button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" onClick={handleOpenModal}
                     whileHover={{ scale: 1.1 }}
@@ -274,7 +289,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                             </div>
                         </div>
                     ) || (
-                            <motion.div 
+                            <motion.div
                                 className="animate-fade-in relative z-10 flex flex-row gap-4 w-full h-auto max-w-full items-center justify-center"
                                 initial={{ x: '-100%' }}
                                 animate={{ x: 0 }}
