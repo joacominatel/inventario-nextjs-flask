@@ -4,6 +4,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMouse, faHeadphones, faDisplay, faKeyboard, faPhone, faComputer } from "@fortawesome/free-solid-svg-icons";
 import axios from "axios";
 import { motion } from "framer-motion";
+import Swal from "sweetalert2";
 
 const accesorioIconMap = {
     Mouse: { icon: faMouse, bgColor: "bg-blue-500" },
@@ -32,10 +33,24 @@ const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, canti
     };
 
     const handleDoubleClick = () => {
-        if (window.confirm("Are you sure you want to delete this accessory?")) {
-            axios.delete(`http://localhost:8010/api/v1.0/accessories/${id}`);
-            setDeleted(true);
-        }
+        const confirmDeleteAcc = Swal.fire({
+            title: `¿Eliminar ${accesorio}?`,
+            text: "No podrás revertir esto",
+            icon: "warning",
+            showCancelButton: true,
+            confirmButtonColor: "#3085d6",
+            cancelButtonColor: "#d33",
+            confirmButtonText: "Sí, eliminar",
+            cancelButtonText: "Cancelar",
+        }).then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(`http://localhost:8010/api/v1.0/accessories/${id}`);
+                setDeleted(true);
+                Swal.fire("Eliminado", "El accesorio ha sido eliminado", "success");
+            } else {
+                Swal.fire("Cancelado", "El accesorio no fue eliminado", "info");
+            }
+        });
     };
 
     if (deleted) {

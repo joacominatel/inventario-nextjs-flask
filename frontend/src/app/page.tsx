@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import User from "./components/User";
+import axios from "axios";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -36,8 +37,8 @@ export default function Home() {
         }
 
         // url /api/v1.0/users/<string>
-        const response = await fetch(`http://localhost:8010/api/v1.0/users/${search}`);
-        const data = await response.json();
+        const response = await axios.get(`http://localhost:8010/api/v1.0/users/${search}`);
+        const data = response.data;
 
         const initialUsersData: usersData[] = [];
 

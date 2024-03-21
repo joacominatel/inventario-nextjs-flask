@@ -1,10 +1,11 @@
 import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrash, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faLock, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import UserAccessories from './UserAccessories';
 import axios from 'axios';
+import Swal from 'sweetalert2';
 
 interface UserProps {
     id: string;
@@ -88,21 +89,40 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     };
 
     const handleDeleteUser = () => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this user?");
+        const confirmDelete = Swal.fire({
+            title: 'Estas seguro?',
+            text: `Usuario: ${nombre} ${apellido} sera desactivado`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Desactivar!',
+            cancelButtonText: 'No, cancelar!',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                return true;
+            } else if (result.dismiss === Swal.DismissReason.cancel) {
+                return false;
+            }
+        });
         
-        if (confirmDelete) {
-            const url = `http://localhost:8010/api/v1.0/users/${id}`;
-            const response = axios.delete(url)
-                .then(response => {
-                    console.log(response.data);
-                    alert(response.data || 'User deleted successfully');
-                })  
-                .catch(e => {
-                    // Handle error
-                    console.error('Error:', e);
-                    alert('Error deleting user');
-                });
-        }
+        confirmDelete.then((result) => {
+            if (result) {
+                const url = `http://localhost:8010/api/v1.0/users/${id}`;
+                axios.post(url, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                })
+                    .then(response => {
+                        // Handle successful response
+                        console.log(response.data);
+                    })
+                    .catch(error => {
+                        // Handle error
+                        console.error('Error:', error);
+                    });
+            }
+        });
     };
 
     const handleSaveUser = () => {
@@ -135,7 +155,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                     whileHover={{ scale: 1.1 }}
                     whileTap={{ scale: 0.9 }}
                 >
-                    <FontAwesomeIcon icon={faTrash} />
+                    <FontAwesomeIcon icon={faLock} />
                 </motion.button>
                 <motion.button className="bg-purple-500 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded" onClick={handleOpenModal}
                     whileHover={{ scale: 1.1 }}

@@ -46,11 +46,11 @@ def users():
 def search_user(nombre):
     try:
         nombre = nombre.capitalize()
-        users = Users.query.filter(or_(
+        users = Users.query.filter(and_(or_(
             Users.nombre.like(f'{nombre}%'),
             Users.apellido.like(f'{nombre}%'),
             Users.mail.like(f'{nombre}%')
-        )).all()
+        ), Users.is_active == True)).all()
 
         if len(users) == 0:
             return jsonify({'message': 'Usuario no encontrado'})
@@ -78,8 +78,8 @@ def create_user():
     except:
         return jsonify({'message': 'Error al crear el usuario'})    
     
-@app.route('/api/v1.0/users/<int:id>', methods=['DELETE'])
-def delete_user(id):
+@app.route('/api/v1.0/users/<int:id>', methods=['POST'])
+def deactivate_user(id):
     try:
         user = Users.query.get(id)
 
@@ -95,16 +95,13 @@ def delete_user(id):
                 db.session.delete(accessory)
                 db.session.commit()
         except:
-            db.session.rollback()
-            return jsonify({'message': 'Error al eliminar los accesorios del usuario'}), 500
-
-        db.session.delete(user)
+            return jsonify({'message': 'Error al eliminar los accesorios'})
+        
+        user.is_active = False
         db.session.commit()
-
-        return jsonify(f'Usuario {nombre} eliminado')
-    except Exception as e:
-        db.session.rollback()
-        return jsonify({'message': 'Error al eliminar el usuario', 'error': str(e)})
+        return jsonify({'message': f'Usuario {nombre} desactivado'})
+    except:
+        return jsonify({'message': 'Error al desactivar el usuario'})
 
 @app.route('/api/v1.0/users/<int:id>', methods=['PUT'])
 def update_user(id):
@@ -114,13 +111,14 @@ def update_user(id):
             return jsonify({'message': 'Usuario no encontrado'}), 404
         
         data = request.get_json()
-        
-        print(data)
 
         # Actualizar los atributos del usuario con los nuevos datos
         for key, value in data.items():
             setattr(user, key, value)
         
+        # caambiar el updated_at
+        user.updated_at = func.now()
+                
         # Confirmar los cambios en la base de datos
         db.session.commit()
         
