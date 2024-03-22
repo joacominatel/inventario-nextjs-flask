@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
@@ -27,6 +27,8 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const [editMode, setEditMode] = useState(false);
     const [showAccessories, setShowAccessories] = useState(false);
     const [arrowDirection, setArrowDirection] = useState('right');
+    const [avaibleComputers, setAvaibleComputers] = useState<computadorasData[]>([]);
+    const [computersLoaded, setComputersLoaded] = useState(false);
     const [editedUser, setEditedUser] = useState<UserProps>({
         id,
         nombre,
@@ -54,6 +56,11 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const handleEditUser = () => {
         setEditMode(true);
         setShowAccessories(false);
+
+        if (!computersLoaded) {
+            fetchAvailableComputers();
+            setComputersLoaded(true);
+        }
     };
 
     const handleToggleAccessories = () => {
@@ -84,6 +91,15 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             ...prevState,
             [id]: value,
         }));
+    };
+
+    const fetchAvailableComputers = async () => {
+        try {
+            const response = await axios.get('http://localhost:8010/api/v1.0/computadoras');
+            setAvaibleComputers(response.data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     const handleDeleteUser = () => {
@@ -147,20 +163,33 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     }
     const handleSaveUser = () => {
         const url = `http://localhost:8010/api/v1.0/users/${id}`;
-        axios.put(url, editedUser, {
+        const data ={
+            nombre: editedUser.nombre,
+            apellido: editedUser.apellido,
+            mail: editedUser.mail,
+            usuario: editedUser.usuario,
+            computadora_id: editedUser.computadora[0].id
+        }
+
+        axios.put(url, data, {
             headers: {
                 'Content-Type': 'application/json',
             },
         })
-            .then(response => {
-                // Handle successful response
-                console.log(response.data);
-                window.location.reload();
-            })
-            .catch(error => {
-                // Handle error
-                console.error('Error:', error);
-            });
+        .then (response => {
+            if (response.status === 200) {
+                Swal.fire('Usuario actualizado', '', 'success');
+                handleCloseModal();
+                // console.log(response.data);
+            } else {
+                Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+                console.error('Error:', response);
+            }
+        })
+        .catch(error => {
+            Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+            console.error('Error:', error);
+        });
     };
 
     return (
@@ -249,49 +278,22 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         onChange={handleChange}
                                     />
                                 </div>
-                                {editedUser.computadora.map((computadora, index) => (
-                                    <React.Fragment key={index}>
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-bold mb-2" htmlFor={`marca_${index}`}>
-                                                Marca
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id={`marca_${index}`}
-                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                                placeholder="Marca"
-                                                value={computadora.marca || ''}
-                                                onChange={(e) => handleComputerChange(index, 'marca', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-bold mb-2" htmlFor={`modelo_${index}`}>
-                                                Modelo
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id={`modelo_${index}`}
-                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                                placeholder="Modelo"
-                                                value={computadora.modelo || ''}
-                                                onChange={(e) => handleComputerChange(index, 'modelo', e.target.value)}
-                                            />
-                                        </div>
-                                        <div className="mb-4">
-                                            <label className="block text-sm font-bold mb-2" htmlFor={`serie_${index}`}>
-                                                Serie
-                                            </label>
-                                            <input
-                                                type="text"
-                                                id={`serie_${index}`}
-                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                                placeholder="Serie"
-                                                value={computadora.serie || ''}
-                                                onChange={(e) => handleComputerChange(index, 'serie', e.target.value)}
-                                            />
-                                        </div>
-                                    </React.Fragment>
-                                ))}
+                                <div className='mb-4'>
+                                    <label className='block text-sm font-bold mb-2' htmlFor='computadora'>
+                                        Choose a computer
+                                    </label>
+                                    <select
+                                        id='computadora'
+                                        className='w-full p-3 rounded-lg shadow-md bg-gray-100 border-0'
+                                        value={editedUser.computadora[0].id}
+                                        onChange={(e) => handleComputerChange(0, 'id', e.target.value)}
+                                    >
+                                        <option value="">Select a computer</option>
+                                        {avaibleComputers.map(computer => (
+                                            <option key={computer.id} value={computer.id}>{computer.marca} {computer.modelo} | {computer.serie}</option>
+                                        ))}
+                                    </select>
+                                </div>
                             </form>
 
                             <hr className="my-4" />

@@ -73,7 +73,7 @@ export default function Home() {
             win11_installed: user.win11_installed
           });
 
-            console.log(user.computadora);
+            // console.log(user.computadora);
         });
         setUsers(initialUsersData);
 

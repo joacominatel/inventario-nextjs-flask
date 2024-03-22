@@ -13,6 +13,7 @@ try:
     from sql.models.UserComputers import UserComputer
 
     from sqlalchemy.sql import func, exists, and_, or_
+    from sqlalchemy.exc import IntegrityError
 
 except Exception as e:
     print(f"Error: {e}")
@@ -189,25 +190,38 @@ def update_user(id):
         data = request.get_json()
 
         # Actualizar los atributos del usuario con los nuevos datos
-        for key, value in data.items():
-            if key == 'computadoras':
-                computer_ids = [computer['id'] for computer in value]
-                user.computadoras = Computadoras.query.filter(Computadoras.id.in_(computer_ids)).all()
-            
+        user.nombre = data.get('nombre', user.nombre)
+        user.apellido = data.get('apellido', user.apellido)
+        user.mail = data.get('mail', user.mail)
+        user.usuario = data.get('usuario', user.usuario)
+
+        # Obtener el ID de la computadora asignada del cuerpo de la solicitud
+        computadora_id = data.get('computadora_id')
+
+        # Verificar si el ID de la computadora es válido
+        if computadora_id:
+            # Intentar encontrar la computadora correspondiente en la base de datos
+            computadora = Computadoras.query.get(computadora_id)
+            if computadora:
+                # Asignar la computadora al usuario
+                user.computadoras = [computadora]
             else:
-                setattr(user, key, value)
+                # Si no se encuentra la computadora, devolver un mensaje de error
+                return jsonify({'message': 'Computadora no encontrada'}), 404
         
-        # cambiar el updated_at
+        # Actualizar la fecha de modificación
         user.updated_at = func.now()
                 
         # Confirmar los cambios en la base de datos
         db.session.commit()
         
         return jsonify(user.serialize())
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'message': 'Error de integridad al actualizar el usuario'}), 500
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Error al actualizar el usuario', 'error': str(e)}), 500
-
 
 # Accesorios rutas
 
@@ -262,6 +276,15 @@ def accessories_by_user(workday_id):
         return jsonify([accessory.serialize() for accessory in accessories])
     except Exception as e:
         return jsonify({'message': 'Error al obtener los accesorios', 'error': str(e)})
+    
+# Computadoras rutas
+@app.route('/api/v1.0/computadoras', methods=['GET'])
+def get_available_computers():
+    try:
+        computers = Computadoras.query.all()
+        return jsonify([computer.serialize() for computer in computers])
+    except Exception as e:
+        return jsonify({'message': 'Error al recuperar las computadoras', 'error': str(e)}), 500
     
 # inicio de la app
 if __name__ == '__main__':
