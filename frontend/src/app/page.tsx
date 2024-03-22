@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import User from "./components/User";
 import axios from "axios";
+import computadorasData from "./interfaces/computadorasData";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -19,9 +20,7 @@ export default function Home() {
     nombre: string,
     apellido: string,
     mail: string,
-    marca: string,
-    modelo: string,
-    serie: string,
+    computadora: computadorasData[],
     usuario: string,
     created_at: string,
     updated_at: string,
@@ -66,15 +65,15 @@ export default function Home() {
             nombre: user.nombre,
             apellido: user.apellido,
             mail: user.mail,
-            marca: user.marca,
-            modelo: user.modelo,
-            serie: user.serie,
+            computadora: user.computadora,
             usuario: user.usuario,
             created_at: user.created_at,
             updated_at: user.updated_at,
             is_active: user.is_active,
             win11_installed: user.win11_installed
           });
+
+            console.log(user.computadora);
         });
         setUsers(initialUsersData);
 
@@ -123,7 +122,7 @@ export default function Home() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
           >
-            {users.map((user: { id: string, workday_id: string, nombre: string, apellido: string, mail: string, usuario: string, marca: string, modelo: string, serie: string, created_at: string, updated_at: string, win11_installed: boolean, is_active: boolean }) => (
+            {users.map((user: { id: string, workday_id: string, nombre: string, apellido: string, mail: string, usuario: string, created_at: string, updated_at: string, win11_installed: boolean, is_active: boolean, computadora: computadorasData[] }) => (
               <User
                 id={user.id}
                 workday_id={user.workday_id}
@@ -131,11 +130,9 @@ export default function Home() {
                 apellido={user.apellido}
                 mail={user.mail}
                 usuario={user.usuario}
-                marca={user.marca}
-                modelo={user.modelo}
-                serie={user.serie}
-                creacion={user.created_at}
-                modificacion={user.updated_at}
+                computadora={user.computadora || []}
+                created_at={user.created_at}
+                updated_at={user.updated_at}
                 is_active={user.is_active}
                 win11_installed={user.win11_installed}
               />

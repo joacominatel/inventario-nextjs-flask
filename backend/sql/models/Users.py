@@ -11,9 +11,7 @@ class Users(db.Model):
     workday_id = db.Column(db.String(10), unique=True, nullable=False)
     nombre = db.Column(db.String(100), nullable=False)
     apellido = db.Column(db.String(100), nullable=False)
-    marca = db.Column(db.String(100), nullable=False)
-    modelo = db.Column(db.String(100), nullable=False)
-    serie = db.Column(db.String(100), nullable=False)
+    computadora_id = db.relationship('Computadoras', secondary='usuarios_computadoras', backref=db.backref('usuarios', lazy='dynamic'))
     mail = db.Column(db.String(100), nullable=False)
     usuario = db.Column(db.String(100), unique=True, nullable=False)
     win11_installed = db.Column(db.Boolean, default=False)
@@ -30,9 +28,7 @@ class Users(db.Model):
             'workday_id': self.workday_id,
             'nombre': self.nombre,
             'apellido': self.apellido,
-            'marca': self.marca,
-            'modelo': self.modelo,
-            'serie': self.serie,
+            'computadora': [computer.serialize() for computer in self.computadora_id],
             'mail': self.mail,
             'usuario': self.usuario,
             'win11_installed': self.win11_installed,

@@ -3,6 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
 import { motion } from 'framer-motion';
+import computadorasData from '../interfaces/computadorasData';
 import UserAccessories from './UserAccessories';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -14,16 +15,14 @@ interface UserProps {
     apellido: string | null;
     mail: string | null;
     usuario: string | null;
-    marca: string | null;
-    modelo: string | null;
-    serie: string | null;
-    creacion: string | null;
-    modificacion: string | null;
+    computadora: computadorasData[];
     is_active: boolean | null;
     win11_installed: boolean | null;
+    created_at: string | null; // Cambio aquí
+    updated_at: string | null; // Cambio aquí
 }
 
-const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, marca, modelo, serie, creacion, modificacion, win11_installed, is_active }) => {
+const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, win11_installed, is_active, computadora, created_at, updated_at }) => {
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [showAccessories, setShowAccessories] = useState(false);
@@ -34,14 +33,12 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         apellido,
         mail,
         usuario,
-        marca,
-        modelo,
-        serie,
         workday_id: workday_id,
-        creacion,
-        modificacion,
         is_active,
-        win11_installed
+        win11_installed,
+        created_at,
+        updated_at,
+        computadora
     });
 
     const handleOpenModal = () => {
@@ -71,14 +68,12 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             apellido,
             mail,
             usuario,
-            marca,
-            modelo,
-            serie,
             workday_id: workday_id,
-            creacion,
-            modificacion,
             is_active,
-            win11_installed
+            win11_installed,
+            created_at,
+            updated_at,
+            computadora
         });
         setEditMode(false);
     };
@@ -134,6 +129,22 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         });
     };
 
+    const handleComputerChange = (index: number, key: string, value: string) => {
+        const newComputadoras = editedUser.computadora.map((comp, i) => {
+            if (i === index) {
+                return {
+                    ...comp,
+                    [key]: value,
+                };
+            }
+            return comp;
+        });
+
+        setEditedUser((prevState) => ({
+            ...prevState,
+            computadora: newComputadoras,
+        }));
+    }
     const handleSaveUser = () => {
         const url = `http://localhost:8010/api/v1.0/users/${id}`;
         axios.put(url, editedUser, {
@@ -238,46 +249,51 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         onChange={handleChange}
                                     />
                                 </div>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-bold mb-2" htmlFor="marca">
-                                        Marca
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="marca"
-                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                        placeholder="Marca"
-                                        value={editedUser.marca || ''}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-bold mb-2" htmlFor="modelo">
-                                        Modelo
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="modelo"
-                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                        placeholder="Modelo"
-                                        value={editedUser.modelo || ''}
-                                        onChange={handleChange}
-                                    />
-                                </div>
-                                <div className="mb-4">
-                                    <label className="block text-sm font-bold mb-2" htmlFor="serie">
-                                        Serie
-                                    </label>
-                                    <input
-                                        type="text"
-                                        id="serie"
-                                        className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
-                                        placeholder="Serie"
-                                        value={editedUser.serie || ''}
-                                        onChange={handleChange}
-                                    />
-                                </div>
+                                {editedUser.computadora.map((computadora, index) => (
+                                    <React.Fragment key={index}>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-bold mb-2" htmlFor={`marca_${index}`}>
+                                                Marca
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id={`marca_${index}`}
+                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                                placeholder="Marca"
+                                                value={computadora.marca || ''}
+                                                onChange={(e) => handleComputerChange(index, 'marca', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-bold mb-2" htmlFor={`modelo_${index}`}>
+                                                Modelo
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id={`modelo_${index}`}
+                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                                placeholder="Modelo"
+                                                value={computadora.modelo || ''}
+                                                onChange={(e) => handleComputerChange(index, 'modelo', e.target.value)}
+                                            />
+                                        </div>
+                                        <div className="mb-4">
+                                            <label className="block text-sm font-bold mb-2" htmlFor={`serie_${index}`}>
+                                                Serie
+                                            </label>
+                                            <input
+                                                type="text"
+                                                id={`serie_${index}`}
+                                                className="w-full p-3 rounded-lg shadow-md bg-gray-100 border-0"
+                                                placeholder="Serie"
+                                                value={computadora.serie || ''}
+                                                onChange={(e) => handleComputerChange(index, 'serie', e.target.value)}
+                                            />
+                                        </div>
+                                    </React.Fragment>
+                                ))}
                             </form>
+
                             <hr className="my-4" />
                             <div className="flex justify-end">
                                 <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCancelEdit}>
@@ -301,11 +317,16 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         <p className="text-lg text-black"><span className='font-bold'>Workday ID:</span> {workday_id}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Email:</span> {mail}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Username:</span> {usuario}</p>
-                                        <p className="text-lg text-black"><span className='font-bold'>Marca:</span> {marca}</p>
-                                        <p className="text-lg text-black"><span className='font-bold'>Modelo:</span> {modelo}</p>
-                                        <p className="text-lg text-black"><span className='font-bold'>Serie:</span> {serie}</p>
-                                        <p className="text-lg text-black"><span className='font-bold'>Creacion:</span> {creacion}</p>
-                                        <p className="text-lg text-black"><span className='font-bold'>Modificacion:</span> {modificacion}</p>
+                                        {computadora.map((comp) => (
+                                            <div key={comp.id}>
+                                                <p className="text-lg text-black"><span className='font-bold'>Marca:</span> {comp.marca}</p>
+                                                <p className="text-lg text-black"><span className='font-bold'>Modelo:</span> {comp.modelo}</p>
+                                                <p className="text-lg text-black"><span className='font-bold'>Serie:</span> {comp.serie}</p>
+                                            </div>
+                                        ))
+                                        }
+                                        <p className="text-lg text-black"><span className='font-bold'>Creacion:</span> {created_at}</p>
+                                        <p className="text-lg text-black"><span className='font-bold'>Modificacion:</span> {updated_at}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Win11 Installed:</span> {win11_installed ? "Yes" : "No"}</p>
                                         <div className="flex justify-end">
                                             <motion.button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCloseModal}
