@@ -7,9 +7,12 @@ import axios from "axios";
 export default function Home() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<usersData[]>([]);
-  const [searchActive, setSearchActive] = useState(true);
+  const [searchActive, setSearchActive] = useState(() => {
+      const storedValue = typeof window !== 'undefined' ? localStorage.getItem("searchActive") : null;
+      return storedValue !==  null ? JSON.parse(storedValue) : true;
+  })
 
-  // Explicitly type the users state as an array of objects with specific properties
+  // Explicitly type the users state as an array of  objects with specific properties
   interface usersData {
     readonly id: string,
     workday_id: string,
@@ -25,6 +28,11 @@ export default function Home() {
     is_active: boolean,
     win11_installed: boolean
   }
+
+  // Almacenar en localStorage cuando cambie el estado
+  useEffect(() => {
+    localStorage.setItem('searchActive', JSON.stringify(searchActive));
+  }, [searchActive]);
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
@@ -68,7 +76,6 @@ export default function Home() {
             win11_installed: user.win11_installed
           });
         });
-        console.log(initialUsersData);
         setUsers(initialUsersData);
 
       } catch (error) {
