@@ -68,8 +68,8 @@ const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, canti
             </div>
             <motion.div className="flex-1 transition-all ease-in-out transform hover:scale-105">
                 <h2 className="text-2xl font-bold text-white">{accesorio}</h2>
+                <p className="text-white text-sm">Detalle: {detalle}</p>
                 {detailVisible && <p className="text-white text-sm">Cantidad: {cantidad}</p>}
-                {detailVisible && <p className="text-white text-sm">Detalle: {detalle}</p>}
                 {detailVisible && <p className="text-white text-sm">Ticket: {ticket}</p>}
             </motion.div>
         </motion.div>

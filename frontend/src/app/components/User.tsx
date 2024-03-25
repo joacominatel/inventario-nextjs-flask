@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
@@ -29,6 +29,8 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         updated_at,
         computadora: [...computadora]
     });
+
+    const URL_API = 'http://localhost:8010/api/v1.0/';
 
     const handleOpenModal = () => {
         setShowModal(true);
@@ -89,7 +91,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
     const fetchAvailableComputers = async () => {
         try {
-            const response = await axios.get('http://localhost:8010/api/v1.0/computadoras');
+            const response = await axios.get(URL_API + 'computadoras');
             setAvaibleComputers(response.data);
         } catch (error) {
             console.error('Error:', error);
@@ -131,7 +133,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
         confirmDelete.then((result) => {
             if (result) {
-                const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
+                const url = `${URL_API}${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
                 axios.post(url, {
                     headers: {
                         'Content-Type': 'application/json',
@@ -184,14 +186,39 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                     Swal.fire('Usuario actualizado', '', 'success');
                     handleCloseModal();
                     // console.log(response.data);
-                } else {
-                    Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
-                    console.error('Error:', response);
+                } else if (response.status === 201) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Cuidado!',
+                        text: `Esta computadora ya esta asignada al usuario ${response.data.assigned_to}, deseas asignarla de todas formas?`,
+                        showCancelButton: true,
+                        confirmButtonText: 'Si, asignar!',
+                        cancelButtonText: 'No, cancelar!',
+                        reverseButtons: true
+
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            axios.post(url + '/force', data, {
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                            })
+                                .then(response => {
+                                    if (response.status === 200) {
+                                        Swal.fire('Usuario actualizado', '', 'success');
+                                        handleCloseModal();
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Error:', error);
+                                });
+                        }
+                    });
+
                 }
             })
             .catch(error => {
-                Swal.fire('Error', `No se pudo actualizar el usuario: ${error.message}`, 'error');
-                console.error('Error:', error);
+                Swal.fire('Error', 'Error al actualizar el usuario', 'error');
             });
     };
 
@@ -223,7 +250,12 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                 </motion.button>
             </div>
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center z-50 flex-row">
+                <motion.div 
+                    className="fixed inset-0 flex items-center justify-center z-50 flex-row"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
                     <div className="absolute inset-0 bg-gray-900 opacity-75" onClick={handleCloseModal}></div>
                     {editMode && (
                         <div className="bg-white p-4 rounded-lg shadow-md animate-fade-in relative z-10 w-auto h-auto max-w-2xl">
@@ -303,6 +335,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                                 </select>
                                                 <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2'
                                                     onClick={() => deleteUserComputer(index)}
+                                                    type='button'
                                                 >
                                                     <FontAwesomeIcon icon={faTrash} />
                                                 </button>
@@ -334,9 +367,10 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                     ) || (
                             <motion.div
                                 className="animate-fade-in relative z-10 flex flex-row gap-4 w-full h-auto max-w-full items-center justify-center"
-                                initial={{ x: '-100%' }}
-                                animate={{ x: 0 }}
-                                transition={{ type: 'tween', stiffness: 120, duration: 0.35 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                                
                             >
                                 <div className="flex justify-start mb-4 bg-white p-4 rounded-lg shadow-md animate-fade-in relative min-h-full mg-4">
                                     <div className="flex flex-col w-full h-auto max-w-2xl text-black p-4">
@@ -382,7 +416,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                 {showAccessories && <UserAccessories workdayId={workday_id} />}
                             </motion.div>
                         )}
-                </div>
+                </motion.div>
             )}
         </div>
     );
