@@ -1,26 +1,13 @@
 import React, { useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft } from '@fortawesome/free-solid-svg-icons'
+import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons'
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import computadorasData from '../interfaces/computadorasData';
 import UserAccessories from './UserAccessories';
 import axios from 'axios';
 import Swal from 'sweetalert2';
-
-interface UserProps {
-    id: string;
-    workday_id: string;
-    nombre: string | null;
-    apellido: string | null;
-    mail: string | null;
-    usuario: string | null;
-    computadora: computadorasData[];
-    is_active: boolean | null;
-    win11_installed: boolean | null;
-    created_at: string | null; // Cambio aquí
-    updated_at: string | null; // Cambio aquí
-}
+import UserProps from '../interfaces/UserProps';
 
 const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, win11_installed, is_active, computadora, created_at, updated_at }) => {
     const [showModal, setShowModal] = useState(false);
@@ -40,7 +27,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         win11_installed,
         created_at,
         updated_at,
-        computadora
+        computadora: [...computadora]
     });
 
     const handleOpenModal = () => {
@@ -85,6 +72,13 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         setEditMode(false);
     };
 
+    const handleAddComputer = () => {
+        setEditedUser(prevState => ({
+            ...prevState,
+            computadora: [...prevState.computadora, { id, marca: null, modelo: null, serie: null, created_at: null, updated_at: null }]
+        }));
+    };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { id, value } = e.target;
         setEditedUser((prevState) => ({
@@ -101,6 +95,16 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             console.error('Error:', error);
         }
     };
+
+    const deleteUserComputer = (index: number) => {
+        setEditedUser((prevState) => {
+            const newComputadora = prevState.computadora.filter((_, i) => i !== index);
+            return {
+                ...prevState,
+                computadora: newComputadora,
+            };
+        });
+    }
 
     const handleDeleteUser = () => {
         const confirmDelete = Swal.fire({
@@ -146,50 +150,49 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     };
 
     const handleComputerChange = (index: number, key: string, value: string) => {
-        const newComputadoras = editedUser.computadora.map((comp, i) => {
-            if (i === index) {
-                return {
-                    ...comp,
-                    [key]: value,
-                };
-            }
-            return comp;
+        console.log('Nuevo ID de la computadora:', value);
+        setEditedUser((prevState) => {
+            const newComputadora = [...prevState.computadora];
+            newComputadora[index] = {
+                ...newComputadora[index],
+                [key]: value,
+            };
+            return {
+                ...prevState,
+                computadora: newComputadora,
+            };
         });
-
-        setEditedUser((prevState) => ({
-            ...prevState,
-            computadora: newComputadoras,
-        }));
     }
+
     const handleSaveUser = () => {
         const url = `http://localhost:8010/api/v1.0/users/${id}`;
-        const data ={
+        const data = {
             nombre: editedUser.nombre,
             apellido: editedUser.apellido,
             mail: editedUser.mail,
             usuario: editedUser.usuario,
-            computadora_id: editedUser.computadora[0].id
-        }
+            computadoras_ids: editedUser.computadora.map((comp) => comp.id),
+        };
 
         axios.put(url, data, {
             headers: {
                 'Content-Type': 'application/json',
             },
         })
-        .then (response => {
-            if (response.status === 200) {
-                Swal.fire('Usuario actualizado', '', 'success');
-                handleCloseModal();
-                // console.log(response.data);
-            } else {
-                Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
-                console.error('Error:', response);
-            }
-        })
-        .catch(error => {
-            Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
-            console.error('Error:', error);
-        });
+            .then(response => {
+                if (response.status === 200) {
+                    Swal.fire('Usuario actualizado', '', 'success');
+                    handleCloseModal();
+                    // console.log(response.data);
+                } else {
+                    Swal.fire('Error', 'No se pudo actualizar el usuario', 'error');
+                    console.error('Error:', response);
+                }
+            })
+            .catch(error => {
+                Swal.fire('Error', `No se pudo actualizar el usuario: ${error.message}`, 'error');
+                console.error('Error:', error);
+            });
     };
 
     return (
@@ -279,20 +282,42 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                     />
                                 </div>
                                 <div className='mb-4'>
-                                    <label className='block text-sm font-bold mb-2' htmlFor='computadora'>
-                                        Choose a computer
-                                    </label>
-                                    <select
-                                        id='computadora'
-                                        className='w-full p-3 rounded-lg shadow-md bg-gray-100 border-0'
-                                        value={editedUser.computadora[0].id}
-                                        onChange={(e) => handleComputerChange(0, 'id', e.target.value)}
+                                    {editedUser.computadora.map((computadora, index) => (
+                                        <div className="flex flex-col" key={index}>
+                                            <label className='block text-sm font-bold mb-2' htmlFor={`computadora-${index}`}>
+                                                Choose a computer
+                                            </label>
+                                            <div className='flex flex-row justify-between'>
+                                                <select
+                                                    id={`computadora-${index}`}
+                                                    className='w-full p-3 rounded-lg shadow-md bg-gray-100 border-0'
+                                                    value={computadora.id}
+                                                    onChange={(e) => handleComputerChange(index, 'id', e.target.value)}
+                                                >
+                                                    <option value=''>Choose a computer</option>
+                                                    {
+                                                        avaibleComputers.map((comp) => (
+                                                            <option key={comp.id} value={comp.id}>{comp.marca} {comp.modelo} | {comp.serie}</option>
+                                                        ))
+                                                    }
+                                                </select>
+                                                <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2'
+                                                    onClick={() => deleteUserComputer(index)}
+                                                >
+                                                    <FontAwesomeIcon icon={faTrash} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                    <motion.button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mt-4"
+                                        type='button'
+                                        whileHover={{ scale: 1.1 }}
+                                        whileTap={{ scale: 0.9 }}
+                                        onClick={handleAddComputer}
                                     >
-                                        <option value="">Select a computer</option>
-                                        {avaibleComputers.map(computer => (
-                                            <option key={computer.id} value={computer.id}>{computer.marca} {computer.modelo} | {computer.serie}</option>
-                                        ))}
-                                    </select>
+                                        Add Computer
+                                    </motion.button>
+
                                 </div>
                             </form>
 
@@ -319,12 +344,8 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                         <p className="text-lg text-black"><span className='font-bold'>Workday ID:</span> {workday_id}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Email:</span> {mail}</p>
                                         <p className="text-lg text-black"><span className='font-bold'>Username:</span> {usuario}</p>
-                                        {computadora.map((comp) => (
-                                            <div key={comp.id}>
-                                                <p className="text-lg text-black"><span className='font-bold'>Marca:</span> {comp.marca}</p>
-                                                <p className="text-lg text-black"><span className='font-bold'>Modelo:</span> {comp.modelo}</p>
-                                                <p className="text-lg text-black"><span className='font-bold'>Serie:</span> {comp.serie}</p>
-                                            </div>
+                                        {computadora.map((comp, index = 1) => (
+                                            <p className="text-lg text-black" key={comp.id}><span className='font-bold'>Computadora {index}:</span> {comp.marca} {comp.modelo} | {comp.serie}</p>
                                         ))
                                         }
                                         <p className="text-lg text-black"><span className='font-bold'>Creacion:</span> {created_at}</p>

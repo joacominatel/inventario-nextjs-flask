@@ -124,6 +124,7 @@ export default function Home() {
           >
             {users.map((user: { id: string, workday_id: string, nombre: string, apellido: string, mail: string, usuario: string, created_at: string, updated_at: string, win11_installed: boolean, is_active: boolean, computadora: computadorasData[] }) => (
               <User
+                key={user.id}
                 id={user.id}
                 workday_id={user.workday_id}
                 nombre={user.nombre}

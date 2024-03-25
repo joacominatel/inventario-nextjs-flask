@@ -1,25 +1,16 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import AddAccessoryForm from "./AddAccessoryForm";
-import Accesorio from "./Accesorio";
 import { motion } from "framer-motion";
 
-interface UserAccessories {
-    id: string;
-    workday_id: string;
-    accesorio: string;
-    detalle: string;
-    ticket: string;
-    cantidad: number;
-    created_at: string;
-    updated_at: string;
-}
+import Accesorio from "./Accesorio";
+import UserAccessories from "../interfaces/UserAccessories";
+import AddAccessoryForm from "./AddAccessoryForm";
 
-interface UserAccessoriesProps {
+interface UserAccessoriesProp {
     workdayId: string;
 }
 
-const UserAccessories: React.FC<UserAccessoriesProps> = ({ workdayId }) => {
+const UserAccessories: React.FC<UserAccessoriesProp> = ({ workdayId }) => {
     const [accessories, setAccessories] = useState<UserAccessories[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [addAccessoryFormVisible, setAddAccessoryFormVisible] = useState<boolean>(false);

@@ -183,7 +183,8 @@ def activate_user(id):
 @app.route('/api/v1.0/users/<int:id>', methods=['PUT'])
 def update_user(id):
     try:
-        user = Users.query.get(id)
+        user = Users.query.filter_by(id=id).first()
+        
         if not user:
             return jsonify({'message': 'Usuario no encontrado'}), 404
         
@@ -196,19 +197,44 @@ def update_user(id):
         user.usuario = data.get('usuario', user.usuario)
 
         # Obtener el ID de la computadora asignada del cuerpo de la solicitud
-        computadora_id = data.get('computadora_id')
+        computadoras_ids = data.get('computadoras_ids', [])
 
-        # Verificar si el ID de la computadora es válido
-        if computadora_id:
-            # Intentar encontrar la computadora correspondiente en la base de datos
-            computadora = Computadoras.query.get(computadora_id)
-            if computadora:
-                # Asignar la computadora al usuario
-                user.computadoras = [computadora]
-            else:
-                # Si no se encuentra la computadora, devolver un mensaje de error
-                return jsonify({'message': 'Computadora no encontrada'}), 404
-        
+        for computadora_id in computadoras_ids:
+            # Obtener la computadora asignada
+            computadora = Computadoras.query.filter_by(id=computadora_id).first()
+
+            try:
+                # chequear si existe la computadora
+                if not computadora:
+                    print('Computadora no encontrada')
+                    return jsonify({'message': 'Computadora no encontrada'}), 404
+                
+                # chequear si la computadora ya esta asignada a otro usuario
+                if UserComputer.query.filter_by(computer_id=computadora_id).first():
+                    # si el usuario que tiene asignada la computadora es el mismo que se esta actualizando
+                    if UserComputer.query.filter_by(computer_id=computadora_id).first().user_id == id:
+                        # borrar esta asignacion
+                        UserComputer.query.filter_by(computer_id=computadora_id).delete()
+                        db.session.commit()
+                    # si el usuario tiene mas computadoras que las que se estan asignando, borrara las que no esten en la lista
+                    elif len(computadoras_ids) < len(UserComputer.query.filter_by(user_id=id).all()):
+                        UserComputer.query.filter_by(user_id=id).delete()
+                        db.session.commit()
+                    else:
+                        # si la computadora esta asignada a otro usuario, dar error
+                        print('Computadora ya asignada a otro usuario')
+                        return jsonify({'message': 'Computadora ya asignada a otro usuario', 'assigned_to': UserComputer.query.filter_by(computer_id=computadora_id).first().user_id}), 400
+                
+                # asignar la computadora al usuario
+                user_computer = UserComputer(user_id=id, computer_id=computadora_id)
+                print(f"Computadora asignada: {user_computer}")
+
+                db.session.add(user_computer)
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                return jsonify({'message': 'Error de integridad al asignar la computadora al usuario'}), 500
+
         # Actualizar la fecha de modificación
         user.updated_at = func.now()
                 
@@ -216,9 +242,6 @@ def update_user(id):
         db.session.commit()
         
         return jsonify(user.serialize())
-    except IntegrityError:
-        db.session.rollback()
-        return jsonify({'message': 'Error de integridad al actualizar el usuario'}), 500
     except Exception as e:
         db.session.rollback()
         return jsonify({'message': 'Error al actualizar el usuario', 'error': str(e)}), 500

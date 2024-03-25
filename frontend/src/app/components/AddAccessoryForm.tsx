@@ -1,6 +1,7 @@
 import React from "react";
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import Swal from "sweetalert2";
 
 interface AddAccessoryFormProps {
     workdayId: string;
@@ -39,7 +40,11 @@ const AddAccessoryForm: React.FC<AddAccessoryFormProps> = ({ workdayId }) => {
     };
 
     if (created) {
-        return <div>Accessory added successfully</div>;
+        Swal.fire({
+            title: "Accessory added",
+            icon: "success",
+        });
+        setCreated(false);
     }
 
     return (
