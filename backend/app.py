@@ -1,9 +1,12 @@
 # Import generales
 try:
-    import flask, os
+    import flask, os, io
     from flask import Flask, request, jsonify, render_template, send_from_directory
     from dotenv import load_dotenv
     from flask_cors import CORS
+    from sharepy import connect
+    import pandas as pd
+    import openpyxl as px
 
     # Import de modelos
     from sql.db import init_db, db
@@ -31,6 +34,49 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Inicialización de la base de datos
 db = init_db(app)
+
+def connectToExcelSharepoint():
+    try:
+        # creando const para la conexion con sharepoint
+        URL = os.getenv('URL')
+        SHAREPOINT_USER = os.getenv('SHAREPOINT_USER')
+        SHAREPOINT_PASSWORD = os.getenv('SHAREPOINT_PASSWORD')
+
+        s = connect(URL, SHAREPOINT_USER, SHAREPOINT_PASSWORD)
+        return s
+    except Exception as e:
+        print(f"Error: {e}")
+        return None
+    
+def onUserBlock(user):
+    '''
+    Cuando un usuario se bloquea en el sistema
+    se buscara en el excel la casilla con el mail del usuario y se pintara de rojo la fila
+    '''
+    try:
+        # conectando a sharepoint
+        s = connectToExcelSharepoint()
+
+        with io.BytesIO() as output:
+            s.getfile('Usuarios.xlsx', output)
+            output.seek(0)
+            wb = px.load_workbook(output)
+            ws = wb.active
+
+            # buscar el usuario en el excel
+            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=3, max_col=3):
+                for cell in row:
+                    if cell.value == user.mail:
+                        for cell in ws[f"A{cell.row}:G{cell.row}"][0]:
+                            cell.fill = px.styles.PatternFill(start_color="FF0000", end_color="FF0000", fill_type = "solid")
+                        break
+
+            wb.save('Usuarios.xlsx')
+            s.putfile('Usuarios.xlsx', 'Usuarios.xlsx')
+            return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
 
 # Rutas
 @app.route('/api/v1.0/users', methods=['GET'])
@@ -153,6 +199,12 @@ def deactivate_user(id):
                 db.session.commit()
         except:
             return jsonify({'message': 'Error al eliminar las computadoras'})
+        
+        # bloquear usuario en excel
+        if onUserBlock(user):
+            print(f"Usuario {nombre} bloqueado en el excel")
+        else:
+            print(f"Error al bloquear usuario {nombre} en el excel")
         
         user.is_active = False
         user.updated_at = func.now()

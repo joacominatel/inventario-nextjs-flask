@@ -1,12 +1,11 @@
-import React from 'react';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons'
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
-import computadorasData from '../interfaces/computadorasData';
-import UserAccessories from './UserAccessories';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import UserAccessories from './UserAccessories';
+import computadorasData from '../interfaces/computadorasData';
 import UserProps from '../interfaces/UserProps';
 
 const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, win11_installed, is_active, computadora, created_at, updated_at }) => {
@@ -30,7 +29,18 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         computadora: [...computadora]
     });
 
-    const URL_API = 'http://localhost:8010/api/v1.0/';
+    useEffect(() => {
+        fetchAvailableComputers();
+    }, []);
+
+    const fetchAvailableComputers = async () => {
+        try {
+            const response = await axios.get('http://localhost:8010/api/v1.0/computadoras');
+            setAvaibleComputers(response.data);
+        } catch (error) {
+            console.error('Error:', error);
+        }
+    };
 
     const handleOpenModal = () => {
         setShowModal(true);
@@ -45,11 +55,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const handleEditUser = () => {
         setEditMode(true);
         setShowAccessories(false);
-
-        if (!computersLoaded) {
-            fetchAvailableComputers();
-            setComputersLoaded(true);
-        }
     };
 
     const handleToggleAccessories = () => {
@@ -58,19 +63,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     };
 
     const handleCancelEdit = () => {
-        setEditedUser({
-            id,
-            nombre,
-            apellido,
-            mail,
-            usuario,
-            workday_id: workday_id,
-            is_active,
-            win11_installed,
-            created_at,
-            updated_at,
-            computadora
-        });
         setEditMode(false);
     };
 
@@ -89,15 +81,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         }));
     };
 
-    const fetchAvailableComputers = async () => {
-        try {
-            const response = await axios.get(URL_API + 'computadoras');
-            setAvaibleComputers(response.data);
-        } catch (error) {
-            console.error('Error:', error);
-        }
-    };
-
     const deleteUserComputer = (index: number) => {
         setEditedUser((prevState) => {
             const newComputadora = prevState.computadora.filter((_, i) => i !== index);
@@ -108,8 +91,8 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         });
     }
 
-    const handleDeleteUser = () => {
-        const confirmDelete = Swal.fire({
+    const handleDeleteUser = async () => {
+        const confirmDelete = await Swal.fire({
             title: 'Estas seguro?',
             text: `${nombre} ${apellido} ${is_active ? 'sera desactivado' : 'sera activado'}`,
             icon: 'warning',
@@ -119,36 +102,20 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             confirmButtonText: `${is_active ? 'Si, desactivar!' : 'Si, activar!'}`,
             cancelButtonText: 'No, cancelar!',
             reverseButtons: true
-        }).then((result) => {
-            if (result.isConfirmed && result.value === 'admin1234') {
-                Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
-                return true;
-            } else if (result.isConfirmed && result.value !== 'admin1234') {
-                Swal.fire('Error', 'Contraseña incorrecta', 'error');
-                return false;
-            } else {
-                return false;
-            }
         });
 
-        confirmDelete.then((result) => {
-            if (result) {
-                const url = `${URL_API}${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
-                axios.post(url, {
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                })
-                    .then(response => {
-                        // Handle success`ful response
-                        console.log(response.data);
-                    })
-                    .catch(error => {
-                        // Handle error
-                        console.error('Error:', error);
-                    });
+        if (confirmDelete.isConfirmed && confirmDelete.value === 'admin1234') {
+            Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
+            const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
+            try {
+                const response = await axios.post(url);
+                console.log(response.data);
+            } catch (error) {
+                console.error('Error:', error);
             }
-        });
+        } else if (confirmDelete.isConfirmed && confirmDelete.value !== 'admin1234') {
+            Swal.fire('Error', 'Contraseña incorrecta', 'error');
+        }
     };
 
     const handleComputerChange = (index: number, key: string, value: string) => {

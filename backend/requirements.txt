@@ -7,3 +7,6 @@ flask-wtf
 werkzeug
 python-dotenv
 psycopg2
+pandas
+sharepy
+openpyxl
