@@ -38,7 +38,7 @@ db = init_db(app)
 def connectToExcelSharepoint():
     try:
         # creando const para la conexion con sharepoint
-        URL = os.getenv('URL')
+        URL = os.getenv('URL') # URL del excel en sharepoint
         SHAREPOINT_USER = os.getenv('SHAREPOINT_USER')
         SHAREPOINT_PASSWORD = os.getenv('SHAREPOINT_PASSWORD')
 
@@ -55,25 +55,37 @@ def onUserBlock(user):
     '''
     try:
         # conectando a sharepoint
-        s = connectToExcelSharepoint()
+        excel = connectToExcelSharepoint()
 
-        with io.BytesIO() as output:
-            s.getfile('Usuarios.xlsx', output)
-            output.seek(0)
-            wb = px.load_workbook(output)
+        # si no se puede conectar a sharepoint
+        if not excel:
+            return False
+                
+        # obteniendo el archivo de excel
+        file = excel.getfile()
+
+        with io.BytesIO(file.content) as f:
+            # leyendo el archivo de excel
+            wb = px.load_workbook(f)
             ws = wb.active
 
-            # buscar el usuario en el excel
+            # buscando el usuario en el excel
             for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=3, max_col=3):
                 for cell in row:
                     if cell.value == user.mail:
-                        for cell in ws[f"A{cell.row}:G{cell.row}"][0]:
+                        # pintando la fila de rojo
+                        for cell in row:
                             cell.fill = px.styles.PatternFill(start_color="FF0000", end_color="FF0000", fill_type = "solid")
                         break
+                    else:
+                        print(f"Usuario no encontrado en el excel")
+                    
+            # guardando los cambios en el excel
+            wb.save('file.xlsx')
+            excel.upload('file.xlsx')
 
-            wb.save('Usuarios.xlsx')
-            s.putfile('Usuarios.xlsx', 'Usuarios.xlsx')
             return True
+        
     except Exception as e:
         print(f"Error: {e}")
         return False
