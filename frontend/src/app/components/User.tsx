@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash, faPrint } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -14,7 +14,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const [showAccessories, setShowAccessories] = useState(false);
     const [arrowDirection, setArrowDirection] = useState('right');
     const [avaibleComputers, setAvaibleComputers] = useState<computadorasData[]>([]);
-    const [computersLoaded, setComputersLoaded] = useState(false);
     const [editedUser, setEditedUser] = useState<UserProps>({
         id,
         nombre,
@@ -364,6 +363,12 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                                 whileTap={{ scale: 0.9 }}
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
+                                            </motion.button>
+                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                                whileHover={{ scale: 1.1 }}
+                                                whileTap={{ scale: 0.9 }}
+                                                >
+                                                <FontAwesomeIcon icon={faPrint} />
                                             </motion.button>
                                         </div>
                                     </div>

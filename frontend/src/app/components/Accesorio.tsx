@@ -48,7 +48,7 @@ const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, canti
                 setDeleted(true);
                 Swal.fire("Eliminado", "El accesorio ha sido eliminado", "success");
             } else {
-                Swal.fire("Cancelado", "El accesorio no fue eliminado", "info");
+                console.log("Cancelado");
             }
         });
     };
