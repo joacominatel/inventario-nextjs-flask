@@ -111,6 +111,7 @@ def search_user(nombre):
         ), Users.is_active == True)).all()
 
         if len(users) == 0:
+            print(f"Usuario no encontrado")
             return jsonify({'message': 'Usuario no encontrado'})
         
         # get computer of user
@@ -393,6 +394,26 @@ def get_available_computers():
         return jsonify([computer.serialize() for computer in computers])
     except Exception as e:
         return jsonify({'message': 'Error al recuperar las computadoras', 'error': str(e)}), 500
+    
+@app.route('/api/v1.0/computadoras/<string:workday_id>', methods=['GET'])
+def get_computer_by_user(workday_id):
+    try:
+        # search user by workday_id
+        user = Users.query.filter_by(workday_id=workday_id).first()
+        print(f"Usuario: {user}")
+        
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        # get id of user
+        id = user.id
+
+        # get all computers of user
+        computers = UserComputer.query.filter_by(user_id=id).all()
+        return jsonify([computer.serialize() for computer in computers])
+
+    except:
+        return jsonify({'message': 'Error al obtener la computadora'})
     
 # inicio de la app
 if __name__ == '__main__':

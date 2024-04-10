@@ -56,6 +56,11 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         setShowAccessories(false);
     };
 
+    const callPrintableUser = () => {
+        const endpoint = `/printable/${id}`;
+        window.open(endpoint, '_blank');
+    };
+
     const handleToggleAccessories = () => {
         setShowAccessories(!showAccessories);
         setArrowDirection(arrowDirection === 'right' ? 'down' : 'right');
@@ -364,7 +369,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </motion.button>
-                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={callPrintableUser}
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 >
