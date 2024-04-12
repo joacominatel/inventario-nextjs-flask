@@ -28,10 +28,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         computadora: [...computadora]
     });
 
-    useEffect(() => {
-        fetchAvailableComputers();
-    }, []);
-
     const fetchAvailableComputers = async () => {
         try {
             const response = await axios.get('http://localhost:8010/api/v1.0/computadoras');
@@ -54,11 +50,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const handleEditUser = () => {
         setEditMode(true);
         setShowAccessories(false);
-    };
-
-    const callPrintableUser = () => {
-        const endpoint = `/printable/${id}`;
-        window.open(endpoint, '_blank');
+        fetchAvailableComputers();
     };
 
     const handleToggleAccessories = () => {
@@ -369,7 +361,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </motion.button>
-                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={callPrintableUser}
+                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
                                                 >
