@@ -62,6 +62,11 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         setEditMode(false);
     };
 
+    // recibir como parametro workday_id y enviar a /printable/{workday_id}
+    const handlePrintUser = () => {
+        window.open(`http://localhost:3000/printable/${id}`, '_blank');
+    };
+
     const handleAddComputer = () => {
         setEditedUser(prevState => ({
             ...prevState,
@@ -361,9 +366,10 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </motion.button>
-                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2"
+                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handlePrintUser}
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
+                                                
                                                 >
                                                 <FontAwesomeIcon icon={faPrint} />
                                             </motion.button>

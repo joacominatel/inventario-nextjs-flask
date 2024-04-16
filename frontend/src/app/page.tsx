@@ -46,7 +46,8 @@ export default function Home() {
         }
 
         // url /api/v1.0/users/<string>
-        const response = await axios.get(`http://localhost:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${search}`);
+        const trimmedSearch = search.trim();
+        const response = await axios.get(`http://localhost:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${trimmedSearch}`);
         const data = response.data;
 
         const initialUsersData: usersData[] = [];

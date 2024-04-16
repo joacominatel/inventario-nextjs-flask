@@ -103,24 +103,32 @@ def users():
 @app.route('/api/v1.0/users/<string:nombre>', methods=['GET'])
 def search_user(nombre):
     try:
-        nombre = nombre.capitalize()
-        users = Users.query.filter(and_(or_(
-            Users.nombre.like(f'{nombre}%'),
-            Users.apellido.like(f'{nombre}%'),
-            Users.mail.like(f'{nombre}%')
-        ), Users.is_active == True)).all()
+        nombre = nombre.strip().capitalize()  # Remove leading/trailing spaces and capitalize
+        search_terms = nombre.split(' ')  # Split into individual search terms
 
-        if len(users) == 0:
-            print(f"Usuario no encontrado")
+        # Construct filter query using OR conditions for each term
+        filters = []
+        for term in search_terms:
+            filters.append(or_(
+                Users.nombre.like(f'%{term}%'),
+                Users.apellido.like(f'%{term}%'),
+                Users.mail.like(f'%{term}%')
+            ))
+
+        query = Users.query.filter(and_(*filters), Users.is_active == True).all()
+
+        if not query:
             return jsonify({'message': 'Usuario no encontrado'})
-        
-        # get computer of user
-        for user in users:
+
+        # Get computer data (assuming `computadora` is a relationship)
+        for user in query:
             user.computadora = [computer.serialize() for computer in user.computadora_id]
-        
-        return jsonify([user.serialize() for user in users])                  
-    except:
-        return jsonify({'message': 'Error al obtener los usuarios'})
+
+        return jsonify([user.serialize() for user in query])
+
+    except Exception as e:
+        print(f"Error al obtener los usuarios: {e}")
+        return jsonify({'message': 'Error al obtener los usuarios'}), 500
     
 @app.route('/api/v1.0/usersDisabled/<string:nombre>', methods=['GET'])
 def search_user_disabled(nombre):
@@ -176,7 +184,7 @@ def create_user():
                 user.computadora_id = computer
                 db.session.commit() 
             
-        db.session.commit()        
+        db.session.commit()
         
         return jsonify(user.serialize())
     except:
