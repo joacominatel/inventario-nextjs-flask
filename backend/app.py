@@ -1,4 +1,7 @@
 # Import generales
+import uuid
+
+
 try:
     import flask, os, io
     from flask import Flask, request, jsonify, render_template, send_from_directory
@@ -89,6 +92,75 @@ def onUserBlock(user):
     except Exception as e:
         print(f"Error: {e}")
         return False
+    
+def reemplazar_archivos_smb(servidor, usuario, passwd, archivos_origen, archivos_destino):
+    '''
+    Reemplazaa los archivos enviados en un servidor remoto
+    '''
+    try:
+        from smbprotocol.connection import Connection
+        from smbprotocol.open import (
+            CreateDisposition,
+            CreateOptions,
+            FileAttributes,
+            ImpersonationLevel,
+            Open,
+            ShareAccess,
+        )
+        from smbprotocol.session import Session
+        from smbprotocol.tree import TreeConnect
+    except ImportError as e:
+        print(f"Error: {e}")
+
+    try:
+        # Crear una conexión y una sesión
+        connection = Connection(uuid.uuid4(), servidor, 445)
+        connection.connect()
+        session = Session(connection, usuario, passwd)
+        session.connect()
+
+        for origen, destino in zip(archivos_origen, archivos_destino):
+            # Conectar al recurso compartido
+            share_name = destino.split('/')[1]  # Asume una ruta como 'S:/Joaco/archivo_a_reemplazar1'
+            tree = TreeConnect(session, f"\\\\{servidor}\\{share_name}")
+            tree.connect()
+
+            # Crear/Open un archivo en el recurso compartido
+            open_file = Open(tree, destino.replace(f'{share_name}/', '').replace('/', '\\'), 
+                             desired_access=ShareAccess.FILE_READ_DATA | ShareAccess.FILE_WRITE_DATA,
+                             create_disposition=CreateDisposition.FILE_OVERWRITE_IF,
+                             create_options=CreateOptions.FILE_NON_DIRECTORY_FILE,
+                             file_attributes=FileAttributes.FILE_ATTRIBUTE_NORMAL,
+                             impersonation_level=ImpersonationLevel.Impersonation)
+            open_file.create()
+
+            # Leer el archivo origen y escribir en el destino
+            with open(origen, 'rb') as f_origen:
+                contenido = f_origen.read()
+                open_file.write(0, contenido)
+
+            open_file.close()
+
+        return "Archivos reemplazados con éxito"
+    except Exception as e:
+        return f"Error al reemplazar archivos: {str(e)}"
+    
+@app.route('/api/v1.0/replaceFiles', methods=['GET'])
+def replaceFiles():
+    try:
+        servidor = os.getenv('SERVIDOR_REMOTO')
+        usuario = os.getenv('USUARIO_REMOTO')
+        passwd = os.getenv('PASSWD_REMOTO')
+        archivos_origen = os.getenv('ARCHIVOS_ORIGEN').split(',')
+        archivos_destino = os.getenv('ARCHIVOS_DESTINO').split(',') 
+
+        print(f"Reemplazando archivos en {servidor}...")
+        print(f"Usuario: {usuario}")
+        print(f"Archivos origen: {archivos_origen}")
+        print(f"Archivos destino: {archivos_destino}")
+        return jsonify({'message': servidor, 'replaced': True, 'status': 200,})
+    except Exception as e:
+        return jsonify({'message': 'Error al reemplazar los archivos', 'error': str(e), 'replaced': False, 'status': 500})
 
 # Rutas
 @app.route('/api/v1.0/users', methods=['GET'])
