@@ -6,8 +6,9 @@ Flask-Cors
 flask-wtf
 werkzeug
 python-dotenv
-psycopg2
+psycopg2-binary
 pandas
 sharepy
 openpyxl
 smbprotocol
+gunicorn

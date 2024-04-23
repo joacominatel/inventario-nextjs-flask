@@ -1,15 +1,10 @@
 # Import generales
 import uuid
-
-
 try:
     import flask, os, io
-    from flask import Flask, request, jsonify, render_template, send_from_directory
+    from flask import Flask, request, jsonify
     from dotenv import load_dotenv
     from flask_cors import CORS
-    from sharepy import connect
-    import pandas as pd
-    import openpyxl as px
 
     # Import de modelos
     from sql.db import init_db, db
@@ -18,7 +13,7 @@ try:
     from sql.models.Computers import Computadoras
     from sql.models.UserComputers import UserComputer
 
-    from sqlalchemy.sql import func, exists, and_, or_
+    from sqlalchemy.sql import func, and_, or_
     from sqlalchemy.exc import IntegrityError
 
 except Exception as e:
@@ -31,68 +26,14 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Configuración de la base de datos
 load_dotenv('.env')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('SQLALCHEMY_DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'fallback-sqlalchemy-database-url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
 # Inicialización de la base de datos
 db = init_db(app)
 
-def connectToExcelSharepoint():
-    try:
-        # creando const para la conexion con sharepoint
-        URL = os.getenv('URL') # URL del excel en sharepoint
-        SHAREPOINT_USER = os.getenv('SHAREPOINT_USER')
-        SHAREPOINT_PASSWORD = os.getenv('SHAREPOINT_PASSWORD')
-
-        s = connect(URL, SHAREPOINT_USER, SHAREPOINT_PASSWORD)
-        return s
-    except Exception as e:
-        print(f"Error: {e}")
-        return None
-    
-def onUserBlock(user):
-    '''
-    Cuando un usuario se bloquea en el sistema
-    se buscara en el excel la casilla con el mail del usuario y se pintara de rojo la fila
-    '''
-    try:
-        # conectando a sharepoint
-        excel = connectToExcelSharepoint()
-
-        # si no se puede conectar a sharepoint
-        if not excel:
-            return False
-                
-        # obteniendo el archivo de excel
-        file = excel.getfile()
-
-        with io.BytesIO(file.content) as f:
-            # leyendo el archivo de excel
-            wb = px.load_workbook(f)
-            ws = wb.active
-
-            # buscando el usuario en el excel
-            for row in ws.iter_rows(min_row=2, max_row=ws.max_row, min_col=3, max_col=3):
-                for cell in row:
-                    if cell.value == user.mail:
-                        # pintando la fila de rojo
-                        for cell in row:
-                            cell.fill = px.styles.PatternFill(start_color="FF0000", end_color="FF0000", fill_type = "solid")
-                        break
-                    else:
-                        print(f"Usuario no encontrado en el excel")
-                    
-            # guardando los cambios en el excel
-            wb.save('file.xlsx')
-            excel.upload('file.xlsx')
-
-            return True
-        
-    except Exception as e:
-        print(f"Error: {e}")
-        return False
-    
+ 
 def reemplazar_archivos_smb(servidor, usuario, passwd, archivos_origen, archivos_destino):
     '''
     Reemplazaa los archivos enviados en un servidor remoto
@@ -120,30 +61,34 @@ def reemplazar_archivos_smb(servidor, usuario, passwd, archivos_origen, archivos
         session.connect()
 
         for origen, destino in zip(archivos_origen, archivos_destino):
-            # Conectar al recurso compartido
-            share_name = destino.split('/')[1]  # Asume una ruta como 'S:/Joaco/archivo_a_reemplazar1'
-            tree = TreeConnect(session, f"\\\\{servidor}\\{share_name}")
+            # Crear un árbol de conexión
+            tree = TreeConnect(session, "IPC$")
             tree.connect()
 
-            # Crear/Open un archivo en el recurso compartido
-            open_file = Open(tree, destino.replace(f'{share_name}/', '').replace('/', '\\'), 
-                             desired_access=ShareAccess.FILE_READ_DATA | ShareAccess.FILE_WRITE_DATA,
-                             create_disposition=CreateDisposition.FILE_OVERWRITE_IF,
-                             create_options=CreateOptions.FILE_NON_DIRECTORY_FILE,
-                             file_attributes=FileAttributes.FILE_ATTRIBUTE_NORMAL,
-                             impersonation_level=ImpersonationLevel.Impersonation)
-            open_file.create()
+            # Abrir el archivo de origen
+            open = Open(tree, origen, CreateDisposition.FILE_OPEN, FileAttributes.FILE_ATTRIBUTE_NORMAL, ShareAccess.FILE_SHARE_READ, CreateOptions.FILE_NON_DIRECTORY_FILE)
+            open.create()
 
-            # Leer el archivo origen y escribir en el destino
-            with open(origen, 'rb') as f_origen:
-                contenido = f_origen.read()
-                open_file.write(0, contenido)
+            # Leer el archivo de origen
+            data = open.read(0, 0)
 
-            open_file.close()
+            # Crear el archivo de destino
+            open = Open(tree, destino, CreateDisposition.FILE_OVERWRITE_IF, FileAttributes.FILE_ATTRIBUTE_NORMAL, ShareAccess.FILE_SHARE_READ, CreateOptions.FILE_NON_DIRECTORY_FILE)
+            open.create()
 
-        return "Archivos reemplazados con éxito"
+            # Escribir el archivo de origen en el archivo de destino
+            open.write(0, data)
+
+            # Cerrar el archivo de origen
+            open.close()
+
+            # Cerrar el archivo de destino
+            open.close()
+
+            # Cerrar el árbol de conexión
+            tree.disconnect()
     except Exception as e:
-        return f"Error al reemplazar archivos: {str(e)}"
+        print(f"Error: {e}")
     
 @app.route('/api/v1.0/replaceFiles', methods=['GET'])
 def replaceFiles():
@@ -154,11 +99,8 @@ def replaceFiles():
         archivos_origen = os.getenv('ARCHIVOS_ORIGEN').split(',')
         archivos_destino = os.getenv('ARCHIVOS_DESTINO').split(',') 
 
-        print(f"Reemplazando archivos en {servidor}...")
-        print(f"Usuario: {usuario}")
-        print(f"Archivos origen: {archivos_origen}")
-        print(f"Archivos destino: {archivos_destino}")
-        return jsonify({'message': servidor, 'replaced': True, 'status': 200,})
+        reemplazar_archivos_smb(servidor, usuario, passwd, archivos_origen, archivos_destino)
+        return jsonify({'message': 'Archivos reemplazados con éxito', 'replaced': True, 'status': 200})
     except Exception as e:
         return jsonify({'message': 'Error al reemplazar los archivos', 'error': str(e), 'replaced': False, 'status': 500})
 
@@ -232,35 +174,70 @@ def user(id):
 def create_user():
     try:
         data = request.get_json()
-        user = Users(**data)
+        # print(f"Datos recibidos: {data}")
         
-        db.session.add(user)
+        marca = data.get('marca', '')
+        modelo = data.get('modelo', '')
+        serie = data.get('serie', '')
         
-        # recibe parametro `computadora_id` para asignar la computadora al usuario
-        if 'computadora_id' in data:
-            computer = Computadoras.query.get(data['computadora_id'])
-            if computer:
-                user.computadora_id = computer
-                db.session.commit()
-            # si la computadora esta asignada a otro usuario, se asigna la nueva al nuevo usuario
-            elif computer.user_id:
-                computer = Computadoras.query.filter_by(user_id=user.id).first()
-                computer.user_id = None
-                user.computadora_id = computer
-                db.session.commit()
-            # si la computadora no existe, se crea una nueva
-            else:
-                computer = Computadoras(**data)
-                db.session.add(computer)
-                db.session.commit()
-                user.computadora_id = computer
-                db.session.commit() 
+        computadora = Computadoras.query.filter_by(serie=serie).first()
+        
+        if not computadora:
+            computadora = Computadoras(marca=marca, modelo=modelo, serie=serie)
+            db.session.add(computadora)
             
+        else:
+            computadora.marca = marca
+            computadora.modelo = modelo
+            db.session.commit()
+            
+        del data['marca']
+        del data['modelo']
+        del data['serie']
+        # check if the user already exists
+        user = Users.query.filter_by(mail=data['mail']).first()
+        
+        if user:
+            # replace the user's data
+            user.nombre = data.get('nombre', user.nombre)
+            user.apellido = data.get('apellido', user.apellido)
+            user.workday_id = data.get('workday_id', user.workday_id)
+            user.mail = data.get('mail', user.mail)
+            
+            db.session.add(user)
+        else:
+            user = Users(**data)
+            db.session.add(user)
+            
+        # chequear si la computadora ya esta asignada a otro usuario
+        existing_assignment = UserComputer.query.filter_by(computer_id=computadora.id).first()
+        if existing_assignment and existing_assignment.user_id != user.id:
+            # si la computadora ya esta asignada a otro usuario
+            # se le asignara la computadora al nuevo usuario
+            user_computer = UserComputer(user_id=user.id, computer_id=computadora.id)
+            db.session.add(user_computer)
+        elif existing_assignment and existing_assignment.user_id == user.id:
+            # si la computadora ya esta asignada al usuario, no se hara nada
+            pass
+        else:
+            # si la computadora no esta asignada a ningun usuario, se le asignara al nuevo usuario
+            user_computer = UserComputer(user_id=user.id, computer_id=computadora.id)
+            db.session.add(user_computer)
+        
         db.session.commit()
         
-        return jsonify(user.serialize())
-    except:
-        return jsonify({'message': 'Error al crear el usuario'})    
+        return jsonify({
+            'message': 'Usuario creado con éxito',
+            'user': user.serialize()
+            }, 200)
+        
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify({'message': 'Error de integridad al crear el usuario'}), 500
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'message': 'Error al crear el usuario', 'error': str(e)}), 500
     
 @app.route('/api/v1.0/userDeactivate/<int:id>', methods=['POST'])
 def deactivate_user(id):
@@ -292,13 +269,7 @@ def deactivate_user(id):
                 db.session.commit()
         except:
             return jsonify({'message': 'Error al eliminar las computadoras'})
-        
-        # bloquear usuario en excel
-        if onUserBlock(user):
-            print(f"Usuario {nombre} bloqueado en el excel")
-        else:
-            print(f"Error al bloquear usuario {nombre} en el excel")
-        
+                
         user.is_active = False
         user.updated_at = func.now()
         db.session.commit()

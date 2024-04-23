@@ -1,4 +1,4 @@
-interface UserAccessories {
+interface UserAccessoriesProps {
     id: string;
     workday_id: string;
     accesorio: string;
@@ -9,4 +9,4 @@ interface UserAccessories {
     updated_at: string;
 }
 
-export default UserAccessories;
+export default UserAccessoriesProps;

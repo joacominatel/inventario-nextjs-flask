@@ -3,7 +3,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 
 import Accesorio from "./Accesorio";
-import UserAccessories from "../interfaces/UserAccessories";
+import UserAccessoriesProps from "../interfaces/UserAccessories";
 import AddAccessoryForm from "./AddAccessoryForm";
 
 interface UserAccessoriesProp {
@@ -11,7 +11,7 @@ interface UserAccessoriesProp {
 }
 
 const UserAccessories: React.FC<UserAccessoriesProp> = ({ workdayId }) => {
-    const [accessories, setAccessories] = useState<UserAccessories[]>([]);
+    const [accessories, setAccessories] = useState<UserAccessoriesProps[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [addAccessoryFormVisible, setAddAccessoryFormVisible] = useState<boolean>(false);
 
