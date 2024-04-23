@@ -31,3 +31,7 @@ docs for more detail on building and pushing.
 ### Shutdown and Delete containeres, volumes, images.
 * `docker-compose down`: To stop all and clean containers, networks created by docker compose, and *opcionally* volumes and images.
 * `docker-compose down --volumes --rmi all`: You can add these flags to force delete volumes and images.
+
+### Other util commands to control docker containers
+`docker exec -it CONTAINER_ID bash` Execute bash on a container using the ID
+`docker cp /path_to_file/file.backup CONTAINER_ID:/file.backup` Copy a file from local machine to container.
