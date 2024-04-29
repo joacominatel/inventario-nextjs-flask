@@ -47,22 +47,22 @@ export default function PrintableUser({ params }: { params: any }) {
   };
 
   useEffect(() => {
-    // use axios to fetch user data http://localhost:8010/api/v1.0/users/${params.id}
-    axios.get(`http://localhost:8010/api/v1.0/users/${params.id}`)
+    // use axios to fetch user data http://backend:8010/api/v1.0/users/${params.id}
+    axios.get(`http://backend:8010/api/v1.0/users/${params.id}`)
       .then((response) => setUser(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [params.id]);
 
   useEffect(() => {
-    // use axios to fetch accessories data http://localhost:8010/api/v1.0/accessories/${user?.workday_id}
-    axios.get(`http://localhost:8010/api/v1.0/accessories/${user?.workday_id}`)
+    // use axios to fetch accessories data http://backend:8010/api/v1.0/accessories/${user?.workday_id}
+    axios.get(`http://backend:8010/api/v1.0/accessories/${user?.workday_id}`)
       .then((response) => setAccessories(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [user?.workday_id]);
 
   useEffect(() => {
-    // use axios to fetch computadoras data http://localhost:8010/api/v1.0/computadoras/${user?.workday_id}
-    axios.get(`http://localhost:8010/api/v1.0/computadoras/${user?.workday_id}`)
+    // use axios to fetch computadoras data http://backend:8010/api/v1.0/computadoras/${user?.workday_id}
+    axios.get(`http://backend:8010/api/v1.0/computadoras/${user?.workday_id}`)
       .then((response) => setComputadoras(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [user?.workday_id]);

@@ -201,3 +201,7 @@ cython_debug/
 
 # Docker
 compose.y*ml
+
+# Extras
+migrate.py
+excel/

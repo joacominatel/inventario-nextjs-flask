@@ -1,7 +1,6 @@
 # Import generales
-import uuid
 try:
-    import flask, os, io
+    import flask, os
     from flask import Flask, request, jsonify
     from dotenv import load_dotenv
     from flask_cors import CORS

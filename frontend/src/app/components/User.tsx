@@ -28,9 +28,11 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         computadora: [...computadora]
     });
 
+    const API_URL = process.env.API_URL;
+
     const fetchAvailableComputers = async () => {
         try {
-            const response = await axios.get('http://localhost:8010/api/v1.0/computadoras');
+            const response = await axios.get(`${API_URL}/api/v1.0/computadoras`);
             setAvaibleComputers(response.data);
         } catch (error) {
             console.error('Error:', error);
@@ -107,7 +109,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
         if (confirmDelete.isConfirmed && confirmDelete.value === 'admin1234') {
             Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
-            const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
+            const url = `http://backend:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
             try {
                 const response = await axios.post(url);
                 console.log(response.data);
@@ -135,7 +137,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     }
 
     const handleSaveUser = () => {
-        const url = `http://localhost:8010/api/v1.0/users/${id}`;
+        const url = `http://backend:8010/api/v1.0/users/${id}`;
         const data = {
             nombre: editedUser.nombre,
             apellido: editedUser.apellido,
