@@ -4,10 +4,13 @@ import { useEffect } from "react";
 import User from "./components/User";
 import axios from "axios";
 import computadorasData from "./interfaces/computadorasData";
+import CreateUser from "./components/CreateUser";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 export default function Home() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<usersData[]>([]);
+  const [createFormDisplay, setCreateFormDisplay] = useState(false);
   const [searchActive, setSearchActive] = useState(() => {
       const storedValue = typeof window !== 'undefined' ? localStorage.getItem("searchActive") : null;
       return storedValue !==  null ? JSON.parse(storedValue) : true;
@@ -37,17 +40,34 @@ export default function Home() {
     setSearch(event.target.value);
   }
 
+  function handleCreateFormDisplay() {
+    setCreateFormDisplay(!createFormDisplay);
+  }
+
+  // onclick #createUserForm close the form
+  window.onclick = function(event: any) {
+    if (event.target.id === "createUserForm") {
+      setCreateFormDisplay(false);
+    }
+  }
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // check if search is empty
-        if (search === "") {
+        // check if search is empty or less than 3 characters
+        if (search === "" || search.length < 3) {
           return;
         }
 
         // url /api/v1.0/users/<string>
         const trimmedSearch = search.trim();
-        const response = await axios.get(`http://backend:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${trimmedSearch}`);
+        const response = await axios.get(`http://localhost:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${trimmedSearch}`, {
+          headers: {
+            "Access-Control-Allow-Origin": "*",
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          }
+        });
         const data = response.data;
 
         const initialUsersData: usersData[] = [];
@@ -89,6 +109,11 @@ export default function Home() {
   return (
     // Add a search bar to the page
     <section className="container mx-auto">
+      {createFormDisplay && 
+      <section className="h-full w-full bg-opacity-70 bg-black flex items-center justify-center flex-col fixed" id="createUserForm">
+        <CreateUser />
+      </section>
+      }
       <div className="text-center mt-4 space-y-4">
         <form className="flex flex-row items-center justify-center space-x-4">
           <input
@@ -99,6 +124,13 @@ export default function Home() {
             className="w-full p-4 rounded-lg shadow-md bg-gray-800 text-white focus:outline-none focus:ring focus:border-blue-300"
             placeholder="Buscar usuario por nombre, apellido, correo"
           />
+          <button
+            type="button"
+            onClick={handleCreateFormDisplay}
+            className="p-4 rounded-lg shadow-md bg-blue-500 text-white focus:outline-none focus:ring focus:border-blue-300"
+          >
+            +
+          </button>
           {/* checkbox to search on activated users or deactivated users */}
           <div className="flex justify-center items-center">
             <label htmlFor="searchActive" className="relative inline-flex items-center cursor-pointer">

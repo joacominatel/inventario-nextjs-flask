@@ -18,7 +18,7 @@ const UserAccessories: React.FC<UserAccessoriesProp> = ({ workdayId }) => {
     useEffect(() => {
         const fetchUserAccessories = async () => {
             try {
-                const response = await axios.get(`http://backend:8010/api/v1.0/accessories/${workdayId}`);
+                const response = await axios.get(`http://localhost:8010/api/v1.0/accessories/${workdayId}`);
                 setAccessories(response.data || []);
                 setLoading(false);
             } catch (error) {

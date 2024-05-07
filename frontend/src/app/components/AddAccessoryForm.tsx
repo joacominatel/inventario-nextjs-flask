@@ -21,7 +21,7 @@ const AddAccessoryForm: React.FC<AddAccessoryFormProps> = ({ workdayId }) => {
         setError(null);
 
         try {
-            const response = await axios.post(`http://backend:8010/api/v1.0/accessories/${workdayId}`, {
+            const response = await axios.post(`http://localhost:8010/api/v1.0/accessories/${workdayId}`, {
                 accesorio,
                 detalle,
                 ticket,

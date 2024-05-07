@@ -25,7 +25,7 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Configuración de la base de datos
 load_dotenv('.env')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'fallback-sqlalchemy-database-url')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL', 'fallback-sqlalchemy-database-url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 
@@ -102,26 +102,27 @@ def user(id):
 def create_user():
     try:
         data = request.get_json()
-        # print(f"Datos recibidos: {data}")
+        print(f"Datos recibidos: {data}")
         
         marca = data.get('marca', '')
         modelo = data.get('modelo', '')
         serie = data.get('serie', '')
         
         computadora = Computadoras.query.filter_by(serie=serie).first()
-        
+        # print("1")
         if not computadora:
             computadora = Computadoras(marca=marca, modelo=modelo, serie=serie)
             db.session.add(computadora)
-            
+            # print("2 not computadora")
         else:
             computadora.marca = marca
             computadora.modelo = modelo
-            db.session.commit()
+            # print("2 computadora")
             
-        del data['marca']
-        del data['modelo']
-        del data['serie']
+        db.session.commit()
+        
+
+        # print("3 after delete of vars")
         # check if the user already exists
         user = Users.query.filter_by(mail=data['mail']).first()
         
@@ -131,40 +132,57 @@ def create_user():
             user.apellido = data.get('apellido', user.apellido)
             user.workday_id = data.get('workday_id', user.workday_id)
             user.mail = data.get('mail', user.mail)
-            
+            user.usuario = data.get('usuario', user.usuario)
+            user.win11_installed = True
             db.session.add(user)
+            # print("4 user exists")
         else:
-            user = Users(**data)
+            user = Users(
+                workday_id=data['workday_id'],
+                nombre=data['nombre'],
+                apellido=data['apellido'],
+                mail=data['mail'],
+                usuario=data['usuario']
+            )
             db.session.add(user)
+            # print("4 user not exists")
             
         # chequear si la computadora ya esta asignada a otro usuario
         existing_assignment = UserComputer.query.filter_by(computer_id=computadora.id).first()
         if existing_assignment and existing_assignment.user_id != user.id:
+            # print("4.5 computer assigned to another user")
             # si la computadora ya esta asignada a otro usuario
             # se le asignara la computadora al nuevo usuario
             user_computer = UserComputer(user_id=user.id, computer_id=computadora.id)
             db.session.add(user_computer)
+            # print("5 computer assigned to another user")
         elif existing_assignment and existing_assignment.user_id == user.id:
             # si la computadora ya esta asignada al usuario, no se hara nada
+            # print("5 computer assigned to the user")
             pass
+        
         else:
+            # print("4.5 computer not assigned")
             # si la computadora no esta asignada a ningun usuario, se le asignara al nuevo usuario
             user_computer = UserComputer(user_id=user.id, computer_id=computadora.id)
             db.session.add(user_computer)
+            # print("5 computer not assigned")
         
         db.session.commit()
-        
+        # print("6 after commit")
         return jsonify({
             'message': 'Usuario creado con éxito',
             'user': user.serialize()
             }, 200)
         
-    except IntegrityError:
+    except IntegrityError as e:
         db.session.rollback()
+        print(f"Error de integridad al crear el usuario: {e}")
         return jsonify({'message': 'Error de integridad al crear el usuario'}), 500
     
     except Exception as e:
         db.session.rollback()
+        print(f"Error al crear el usuario: {e}")
         return jsonify({'message': 'Error al crear el usuario', 'error': str(e)}), 500
     
 @app.route('/api/v1.0/userDeactivate/<int:id>', methods=['POST'])

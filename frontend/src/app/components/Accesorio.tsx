@@ -44,7 +44,7 @@ const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, canti
             cancelButtonText: "Cancelar",
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.delete(`http://backend:8010/api/v1.0/accessories/${id}`);
+                axios.delete(`http://localhost:8010/api/v1.0/accessories/${id}`);
                 setDeleted(true);
                 Swal.fire("Eliminado", "El accesorio ha sido eliminado", "success");
             } else {

@@ -14,6 +14,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     const [showAccessories, setShowAccessories] = useState(false);
     const [arrowDirection, setArrowDirection] = useState('right');
     const [avaibleComputers, setAvaibleComputers] = useState<computadorasData[]>([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [editedUser, setEditedUser] = useState<UserProps>({
         id,
         nombre,
@@ -28,11 +29,9 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         computadora: [...computadora]
     });
 
-    const API_URL = process.env.API_URL;
-
     const fetchAvailableComputers = async () => {
         try {
-            const response = await axios.get(`${API_URL}/api/v1.0/computadoras`);
+            const response = await axios.get(`http://localhost:8010/api/v1.0/computadoras`);
             setAvaibleComputers(response.data);
         } catch (error) {
             console.error('Error:', error);
@@ -76,6 +75,14 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         }));
     };
 
+    const filteredComputers = searchTerm.length > 0
+        ? avaibleComputers.filter(
+            (comp) => comp.marca && comp.marca.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            (comp.modelo && comp.modelo.toLowerCase().includes(searchTerm.toLowerCase())) || 
+            (comp.serie && comp.serie.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+        : avaibleComputers;
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { id, value } = e.target;
         setEditedUser((prevState) => ({
@@ -109,7 +116,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
         if (confirmDelete.isConfirmed && confirmDelete.value === 'admin1234') {
             Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
-            const url = `http://backend:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
+            const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
             try {
                 const response = await axios.post(url);
                 console.log(response.data);
@@ -137,7 +144,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     }
 
     const handleSaveUser = () => {
-        const url = `http://backend:8010/api/v1.0/users/${id}`;
+        const url = `http://localhost:8010/api/v1.0/users/${id}`;
         const data = {
             nombre: editedUser.nombre,
             apellido: editedUser.apellido,
@@ -220,7 +227,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                 </motion.button>
             </div>
             {showModal && (
-                <motion.div 
+                <motion.div
                     className="fixed inset-0 flex items-center justify-center z-50 flex-row"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -284,6 +291,19 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                     />
                                 </div>
                                 <div className='mb-4'>
+                                    <label className='block text-sm font-bold mb-2' htmlFor='search'>
+                                        Search computers
+                                    </label>
+
+                                    <input
+                                        type='text'
+                                        id='search'
+                                        className='w-full p-3 rounded-lg shadow-md bg-gray-100 border-0'
+                                        placeholder='Search computers'
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                    />
+
                                     {editedUser.computadora.map((computadora, index) => (
                                         <div className="flex flex-col" key={index}>
                                             <label className='block text-sm font-bold mb-2' htmlFor={`computadora-${index}`}>
@@ -298,7 +318,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                                 >
                                                     <option value=''>Choose a computer</option>
                                                     {
-                                                        avaibleComputers.map((comp) => (
+                                                        filteredComputers.map((comp) => (
                                                             <option key={comp.id} value={comp.id}>{comp.marca} {comp.modelo} | {comp.serie}</option>
                                                         ))
                                                     }
@@ -340,7 +360,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                
+
                             >
                                 <div className="flex justify-start mb-4 bg-white p-4 rounded-lg shadow-md animate-fade-in relative min-h-full mg-4">
                                     <div className="flex flex-col w-full h-auto max-w-2xl text-black p-4">
@@ -371,8 +391,8 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handlePrintUser}
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-                                                
-                                                >
+
+                                            >
                                                 <FontAwesomeIcon icon={faPrint} />
                                             </motion.button>
                                         </div>
