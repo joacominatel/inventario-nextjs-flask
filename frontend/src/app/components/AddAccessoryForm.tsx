@@ -8,6 +8,7 @@ interface AddAccessoryFormProps {
 }
 
 const AddAccessoryForm: React.FC<AddAccessoryFormProps> = ({ workdayId }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
     const [accesorio, setAccesorio] = useState<string>("");
     const [detalle, setDetalle] = useState<string>("");
     const [ticket, setTicket] = useState<string>("");
@@ -21,7 +22,7 @@ const AddAccessoryForm: React.FC<AddAccessoryFormProps> = ({ workdayId }) => {
         setError(null);
 
         try {
-            const response = await axios.post(`http://localhost:8010/api/v1.0/accessories/${workdayId}`, {
+            const response = await axios.post(`${API_URL}/api/v1.0/accessories/${workdayId}`, {
                 accesorio,
                 detalle,
                 ticket,

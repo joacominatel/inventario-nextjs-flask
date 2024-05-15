@@ -11,6 +11,7 @@ interface UserAccessoriesProp {
 }
 
 const UserAccessories: React.FC<UserAccessoriesProp> = ({ workdayId }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
     const [accessories, setAccessories] = useState<UserAccessoriesProps[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
     const [addAccessoryFormVisible, setAddAccessoryFormVisible] = useState<boolean>(false);
@@ -18,7 +19,7 @@ const UserAccessories: React.FC<UserAccessoriesProp> = ({ workdayId }) => {
     useEffect(() => {
         const fetchUserAccessories = async () => {
             try {
-                const response = await axios.get(`http://localhost:8010/api/v1.0/accessories/${workdayId}`);
+                const response = await axios.get(`${API_URL}/api/v1.0/accessories/${workdayId}`);
                 setAccessories(response.data || []);
                 setLoading(false);
             } catch (error) {

@@ -24,6 +24,7 @@ interface AccesorioProps {
 }
 
 const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, cantidad, id }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
     const { icon, bgColor } = accesorioIconMap[accesorio as keyof typeof accesorioIconMap] || { icon: faComputer, bgColor: "bg-cyan-500" };
     const [detailVisible, setDetailVisible] = useState<boolean>(false);
     const [deleted, setDeleted] = useState<boolean>(false);
@@ -44,7 +45,7 @@ const Accesorio: React.FC<AccesorioProps> = ({ accesorio, detalle, ticket, canti
             cancelButtonText: "Cancelar",
         }).then((result) => {
             if (result.isConfirmed) {
-                axios.delete(`http://localhost:8010/api/v1.0/accessories/${id}`);
+                axios.delete(`${API_URL}/api/v1.0/accessories/${id}`);
                 setDeleted(true);
                 Swal.fire("Eliminado", "El accesorio ha sido eliminado", "success");
             } else {

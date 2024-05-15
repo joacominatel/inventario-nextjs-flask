@@ -5,6 +5,7 @@ import UserProps from '../interfaces/UserProps';
 import Swal from 'sweetalert2';
 
 export default function CreateUser() {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8010';
     const [user, setUser] = useState<UserProps>();
     const [workday_id, setWorkdayId] = useState<string>('');
     const [nombre, setNombre] = useState<string>('');
@@ -31,7 +32,7 @@ export default function CreateUser() {
                 is_active: is_active,
                 win11_installed: win11_installed
             };
-            const response = await axios.post('http://localhost:8010/api/v1.0/users', user);
+            const response = await axios.post(`${API_URL}/api/v1.0/users`, user);
 
             if (response.status === 201) {
                 Swal.fire({

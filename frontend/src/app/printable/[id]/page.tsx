@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import axios from "axios";
 
 export default function PrintableUser({ params }: { params: any }) {
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
   const [user, setUser] = useState<UserProps>();
   const [accessories, setAccessories] = useState<UserAccessories[]>([]);
   const [computadoras, setComputadoras] = useState<computadorasData[]>([]);
@@ -47,19 +48,19 @@ export default function PrintableUser({ params }: { params: any }) {
   };
 
   useEffect(() => {
-    axios.get(`http://localhost:8010/api/v1.0/users/${params.id}`)
+    axios.get(`${API_URL}/api/v1.0/users/${params.id}`)
       .then((response) => setUser(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [params.id]);
 
   useEffect(() => {
-    axios.get(`http://localhost:8010/api/v1.0/accessories/${user?.workday_id}`)
+    axios.get(`${API_URL}/api/v1.0/accessories/${user?.workday_id}`)
       .then((response) => setAccessories(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [user?.workday_id]);
 
   useEffect(() => {
-    axios.get(`http://localhost:8010/api/v1.0/computadoras/${user?.workday_id}`)
+    axios.get(`${API_URL}/api/v1.0/computadoras/${user?.workday_id}`)
       .then((response) => setComputadoras(response.data))
       .catch((error) => console.error("Error fetching data:", error));
   }, [user?.workday_id]);

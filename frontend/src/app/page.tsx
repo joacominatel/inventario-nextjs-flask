@@ -5,8 +5,6 @@ import User from "./components/User";
 import axios from "axios";
 import computadorasData from "./interfaces/computadorasData";
 import CreateUser from "./components/CreateUser";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
 export default function Home() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<usersData[]>([]);
@@ -45,10 +43,8 @@ export default function Home() {
   }
 
   // onclick #createUserForm close the form
-  window.onclick = function(event: any) {
-    if (event.target.id === "createUserForm") {
-      setCreateFormDisplay(false);
-    }
+  function closeCreateForm() {
+    setCreateFormDisplay(false);
   }
 
   useEffect(() => {
@@ -58,10 +54,11 @@ export default function Home() {
         if (search === "" || search.length < 3) {
           return;
         }
+        const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
 
         // url /api/v1.0/users/<string>
         const trimmedSearch = search.trim();
-        const response = await axios.get(`http://localhost:8010/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${trimmedSearch}`, {
+        const response = await axios.get(`${API_URL}/api/v1.0/${searchActive ? "users" : "usersDisabled"}/${trimmedSearch}`, {
           headers: {
             "Access-Control-Allow-Origin": "*",
             "Accept": "application/json",
@@ -110,7 +107,7 @@ export default function Home() {
     // Add a search bar to the page
     <section className="container mx-auto">
       {createFormDisplay && 
-      <section className="h-full w-full bg-opacity-70 bg-black flex items-center justify-center flex-col fixed" id="createUserForm">
+      <section className="h-full w-full bg-opacity-70 bg-black flex items-center justify-center flex-col fixed" id="createUserForm" onClick={closeCreateForm}>
         <CreateUser />
       </section>
       }

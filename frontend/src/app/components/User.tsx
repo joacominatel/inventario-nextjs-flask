@@ -9,6 +9,7 @@ import computadorasData from '../interfaces/computadorasData';
 import UserProps from '../interfaces/UserProps';
 
 const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, win11_installed, is_active, computadora, created_at, updated_at }) => {
+    const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [showAccessories, setShowAccessories] = useState(false);
@@ -31,7 +32,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
     const fetchAvailableComputers = async () => {
         try {
-            const response = await axios.get(`http://localhost:8010/api/v1.0/computadoras`);
+            const response = await axios.get(`${API_URL}/api/v1.0/computadoras`);
             setAvaibleComputers(response.data);
         } catch (error) {
             console.error('Error:', error);
@@ -63,11 +64,6 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         setEditMode(false);
     };
 
-    // recibir como parametro workday_id y enviar a /printable/{workday_id}
-    const handlePrintUser = () => {
-        window.open(`http://localhost:3000/printable/${id}`, '_blank');
-    };
-
     const handleAddComputer = () => {
         setEditedUser(prevState => ({
             ...prevState,
@@ -75,13 +71,13 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
         }));
     };
 
-    const filteredComputers = searchTerm.length > 0
-        ? avaibleComputers.filter(
-            (comp) => comp.marca && comp.marca.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            (comp.modelo && comp.modelo.toLowerCase().includes(searchTerm.toLowerCase())) || 
-            (comp.serie && comp.serie.toLowerCase().includes(searchTerm.toLowerCase()))
-        )
-        : avaibleComputers;
+    const userComputersIds = new Set(editedUser.computadora.map(comp => comp.id));
+
+    const filteredComputers = avaibleComputers.filter(comp => {
+        const computerText = `${comp.marca} ${comp.modelo} | ${comp.serie}`.toLowerCase();
+        return computerText.includes(searchTerm.toLowerCase()) || userComputersIds.has(comp.id);
+    });
+
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         const { id, value } = e.target;
@@ -116,10 +112,11 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
 
         if (confirmDelete.isConfirmed && confirmDelete.value === 'admin1234') {
             Swal.fire(`Usuario ${is_active ? 'desactivado' : 'activado'}`, '', 'success');
-            const url = `http://localhost:8010/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
+            const url = `${API_URL}/api/v1.0/${is_active ? 'userDeactivate' : 'userActivate'}/${id}`;
             try {
                 const response = await axios.post(url);
-                console.log(response.data);
+                // mostrar mensaje de exito
+                // console.log(response.data);
             } catch (error) {
                 console.error('Error:', error);
             }
@@ -129,7 +126,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     };
 
     const handleComputerChange = (index: number, key: string, value: string) => {
-        console.log('Nuevo ID de la computadora:', value);
+        // console.log('Nuevo ID de la computadora:', value);
         setEditedUser((prevState) => {
             const newComputadora = [...prevState.computadora];
             newComputadora[index] = {
@@ -144,7 +141,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
     }
 
     const handleSaveUser = () => {
-        const url = `http://localhost:8010/api/v1.0/users/${id}`;
+        const url = `${API_URL}/api/v1.0/users/${id}`;
         const data = {
             nombre: editedUser.nombre,
             apellido: editedUser.apellido,
@@ -309,10 +306,10 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             <label className='block text-sm font-bold mb-2' htmlFor={`computadora-${index}`}>
                                                 Choose a computer
                                             </label>
-                                            <div className='flex flex-row justify-between'>
+                                            <div className='flex flex-row justify-between items-center'>
                                                 <select
                                                     id={`computadora-${index}`}
-                                                    className='w-full p-3 rounded-lg shadow-md bg-gray-100 border-0'
+                                                    className='w-full p-3 rounded-lg shadow-sm bg-white border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-500 focus:ring-opacity-50'
                                                     value={computadora.id}
                                                     onChange={(e) => handleComputerChange(index, 'id', e.target.value)}
                                                 >
@@ -323,7 +320,7 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                                         ))
                                                     }
                                                 </select>
-                                                <button className='bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ml-2'
+                                                <button className='ml-2 bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline'
                                                     onClick={() => deleteUserComputer(index)}
                                                     type='button'
                                                 >
@@ -388,13 +385,12 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
                                             >
                                                 <FontAwesomeIcon icon={faEdit} />
                                             </motion.button>
-                                            <motion.button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" onClick={handlePrintUser}
+                                            <motion.a className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded ml-2" href={`/printable/${id}`}
                                                 whileHover={{ scale: 1.1 }}
                                                 whileTap={{ scale: 0.9 }}
-
                                             >
                                                 <FontAwesomeIcon icon={faPrint} />
-                                            </motion.button>
+                                            </motion.a>
                                         </div>
                                     </div>
                                 </div>

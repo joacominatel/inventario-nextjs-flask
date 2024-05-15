@@ -354,6 +354,61 @@ def create_accessory(workday_id):
     except Exception as e:
         return jsonify({'message': 'Error al crear el accesorio', 'error': str(e)})
 
+@app.route('/api/v1.0/accessories', methods=['POST'])
+def add_accessory():
+    data = request.get_json()
+    try:
+        for item in data:
+            new_accessory = Accessories(
+                                        id=item['id'],
+                                        workday_id=item['workday_id'],
+                                        accesorio=item['accesorio'],
+                                        detalle=item['detalle'],
+                                        ticket=item['ticket'],
+                                        cantidad=item['cantidad']
+                                        )
+            db.session.add(new_accessory)
+        db.session.commit()
+        return jsonify({'message': 'Accesorios agregados correctamente'})
+    except Exception as e:
+        return jsonify({'message': 'Error al agregar los accesorios', 'error': str(e)}), 500        
+
+@app.route('/api/v1.0/notActiveUsers', methods=['POST'])
+def add_not_active_users():
+    data = request.get_json()
+
+    try:
+        # check if the user alr1eady exists
+        for item in data:
+            user = Users.query.filter_by(workday_id=item['workday_id']).first()
+            if user:
+                user.is_active = False
+                db.session.add(user)
+            else:
+                usuario = item['usuario']
+                if usuario == 'nouser' or usuario == '' or usuario == ' ' or usuario == None or usuario == 'null' or usuario == 'undefined':
+                    from random import randint
+                    usuario = f'{item["nombre"].lower()}.{item["apellido"].lower()}.{randint(1, 100)}'
+                
+                mail = item['mail']
+                if mail == '' or mail == ' ' or mail == None or mail == 'null' or mail == 'undefined':
+                    mail = f'{item["nombre"].lower()}.{item["apellido"].lower()}@dentsu.com'
+                
+                new_user = Users(
+                    workday_id=item['workday_id'],
+                    nombre=item['nombre'],
+                    apellido=item['apellido'],
+                    mail=item['mail'],
+                    usuario=usuario,
+                    is_active=False
+                )
+                db.session.add(new_user)
+                
+        db.session.commit()
+        return jsonify({'message': 'Usuarios agregados correctamente'})
+    except Exception as e:
+        return jsonify({'message': 'Error al agregar los usuarios', 'error': str(e)}), 500
+    
 @app.route('/api/v1.0/accessories/<int:id>', methods=['PUT'])
 def update_accessory(id):
     try:
