@@ -1,10 +1,13 @@
 # Import generales
 import uuid
 try:
-    import flask, os, io
+    import requests
+    import flask, os
     from flask import Flask, request, jsonify
     from dotenv import load_dotenv
     from flask_cors import CORS
+    from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
+    from werkzeug.security import generate_password_hash, check_password_hash
 
     # Import de modelos
     from sql.db import init_db, db
@@ -12,6 +15,7 @@ try:
     from sql.models.Accessories import Accessories
     from sql.models.Computers import Computadoras
     from sql.models.UserComputers import UserComputer
+    from sql.models.UserAuth import UserAuth
 
     from sqlalchemy.sql import func, and_, or_
     from sqlalchemy.exc import IntegrityError
@@ -29,9 +33,78 @@ load_dotenv('.env')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'fallback-sqlalchemy-database-url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
+app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
+
+# configurando las tokens
+jwt = JWTManager(app)
+
+# configurando la expiracion de las tokens
+app.config['JWT_ACCESS_TOKEN_EXPIRES'] = False
 
 # Inicialización de la base de datos
 db = init_db(app)
+
+# rutas de autenticacion
+@app.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    
+    if not data:
+        return jsonify({'message': 'Datos incorrectos'}), 400
+    
+    usuario = data.get('usuario', None)
+    password = data.get('password', None)
+    
+    if not usuario or not password:
+        return jsonify({'message': 'Datos incorrectos'}), 400
+    
+    user = UserAuth.query.filter_by(username=usuario).first()
+    
+    if not user:
+        return jsonify({'message': 'Usuario no encontrado'}), 404
+    
+    if not check_password_hash(user.password, password):
+        return jsonify({'message': 'Contraseña incorrecta'}), 401
+    
+    access_token = create_access_token(identity=usuario)
+    return jsonify(access_token=access_token)
+
+@app.route('/api/auth/register', methods=['POST'])
+def register():
+    data = request.get_json()
+    
+    try:
+        user = UserAuth.query.filter_by(username=data['usuario']).first()
+        
+        if user:
+            return jsonify({'message': 'Usuario ya existe'}), 400
+        
+        new_user = UserAuth(
+            username=data['usuario'],
+            password=generate_password_hash(data['password']),
+            role='user',
+            created_at=func.now(),
+            updated_at=func.now()
+        )
+        
+        db.session.add(new_user)
+        db.session.commit()
+        
+        return jsonify({'message': 'Usuario creado con éxito'})
+    except Exception as e:
+        return jsonify({'message': 'Error al crear el usuario', 'error': str(e)}), 500
+
+@app.route('/protected', methods=['GET'])
+@jwt_required()
+def protected():
+    try:
+        current_user = get_jwt_identity()
+        
+        user = UserAuth.query.filter_by(username=current_user).first()
+        
+        return jsonify(logged_in_as=current_user, role=user.role), 200
+    except:
+        return jsonify({'message': 'Error al obtener el usuario'}), 500
 
 # Rutas
 @app.route('/api/v1.0/users', methods=['GET'])

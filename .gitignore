@@ -201,3 +201,11 @@ cython_debug/
 
 # Docker
 compose.y*ml
+
+# Extras
+migrate.py
+excel/
+backup_accesorios/
+backup_users_borrados/
+.env.local
+redmine/
