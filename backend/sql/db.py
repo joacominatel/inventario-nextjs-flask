@@ -28,7 +28,36 @@ def init_db(app):
         #         db.session.commit()
         #         user_computer = UserComputer(user_id=user.id, computer_id=computer.id)
         #         db.session.add(user_computer)
-        
-        db.session.commit()
+        # create administrator user if not exists
+        from sql.models.UserAuth import UserAuth
+
+        try:
+            from datetime import datetime
+            from werkzeug.security import generate_password_hash
+
+            if UserAuth.query.count() == 0:
+                user = UserAuth(username='admin',
+                                password=generate_password_hash('admin'), 
+                                role='admin', 
+                                created_at=datetime.now(), 
+                                updated_at=datetime.now())
+                db.session.add(user)
+                db.session.commit()
+                print('Usuario administrador creado')
+        except Exception as e:
+            print('No se pudo crear el usuario administrador: ', e)
+
+        # mgirating accesories
+        from sql.models.Accessories import Accessories
+        from sql.models.UserAccessories import UserAccessories
+
+        if Accessories.query.count() == 0:
+            print('No hay accesorios')
+        else:
+            for accesory in Accessories.query.all():
+                user_accesory = UserAccessories(user_id=accesory.workday_id, accessory_id=accesory.id)
+                db.session.add(user_accesory)
+            
+            db.session.commit()
 
     return db

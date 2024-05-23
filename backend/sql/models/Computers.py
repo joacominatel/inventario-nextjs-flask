@@ -7,6 +7,7 @@ class Computadoras(db.Model):
     marca = db.Column(db.String(100), nullable=False)
     modelo = db.Column(db.String(100), nullable=False)
     serie = db.Column(db.String(100), nullable=False)
+    before = db.Column(db.JSON)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
     

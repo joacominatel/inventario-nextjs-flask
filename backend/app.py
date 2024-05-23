@@ -16,6 +16,7 @@ try:
     from sql.models.Computers import Computadoras
     from sql.models.UserComputers import UserComputer
     from sql.models.UserAuth import UserAuth
+    from sql.models.UserAccessories import UserAccessories
 
     from sqlalchemy.sql import func, and_, or_
     from sqlalchemy.exc import IntegrityError
@@ -30,7 +31,7 @@ cors = CORS(app, resources={r"/api/*": {"origins": "*"}})
 # Configuración de la base de datos
 load_dotenv('.env')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'fallback-sqlalchemy-database-url')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('SQLALCHEMY_DATABASE_URL', 'fallback-sqlalchemy-database-url')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY')
 app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET_KEY')
@@ -256,10 +257,20 @@ def deactivate_user(id):
 
         # get accessories
         try:
-            accessories = Accessories.query.filter_by(workday_id=user.workday_id).all()
-            for accessory in accessories:
-                db.session.delete(accessory)
+            accessories = UserAccessories.query.filter_by(user_id=user.workday_id).all()
+            for accessoryUser in accessories:
+                accessory = Accessories.query.get(accessoryUser.accessory_id)
+
+                # si el accesorio tuvo un usuario anterior, el anterior se mueve a used_by y en last_used_by se guarda el workday_id del usuario
+                if accessory.last_used_by:
+                    accessory.used_by.append(accessory.last_used_by)
+                    accessory.last_used_by = user.workday_id
+                else:
+                    accessory.last_used_by = user.workday_id
+
+                db.session.delete(accessoryUser)
                 db.session.commit()
+
         except:
             return jsonify({'message': 'Error al eliminar los accesorios'})
         
@@ -267,6 +278,11 @@ def deactivate_user(id):
         try:
             computers = UserComputer.query.filter_by(user_id=user.id).all()
             for computer in computers:
+                # save computer info with move to before
+                computadora = Computadoras.query.get(computer.computer_id)
+                computadora.before = computadora.serialize()
+                computadora.updated_at = func.now()
+
                 db.session.delete(computer)
                 db.session.commit()
         except:
@@ -276,7 +292,7 @@ def deactivate_user(id):
         user.updated_at = func.now()
         db.session.commit()
         
-        return jsonify({'message': f'Usuario {nombre} desactivado'})
+        return jsonify({'message': f'Usuario {nombre} desactivado y sus accesorios y computadoras eliminados'})
     except:
         return jsonify({'message': 'Error al desactivar el usuario'})
     
@@ -395,13 +411,13 @@ def accessories():
     except Exception as e:
         return jsonify({'message': 'Error al obtener los accesorios', 'error': str(e)})
 
-@app.route('/api/v1.0/accessories/<int:workday_id>', methods=['POST'])
-def create_accessory(workday_id):
+@app.route('/api/v1.0/accessories', methods=['POST'])
+def create_accessory():
     try:
         data = request.get_json()
-        accessory = Accessories(workday_id=workday_id, **data)
+        accessory = Accessories(**data)
         
-        print(f"Datos recibidos: {data}")
+        # print(f"Datos recibidos: {data}")
         
         db.session.add(accessory)
         db.session.commit()
@@ -434,10 +450,63 @@ def delete_accessory(id):
 @app.route('/api/v1.0/accessories/<string:workday_id>', methods=['GET'])
 def accessories_by_user(workday_id):
     try:
-        accessories = Accessories.query.filter_by(workday_id=workday_id).all()
+        user = Users.query.filter_by(workday_id=workday_id).first()
+        
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        accessories = UserAccessories.query.filter_by(user_id=user.workday_id).all()
         return jsonify([accessory.serialize() for accessory in accessories])
     except Exception as e:
         return jsonify({'message': 'Error al obtener los accesorios', 'error': str(e)})
+    
+@app.route('/api/v1.0/accessories/<string:workday_id>', methods=['POST'])
+def assign_accessory_to_user(workday_id):
+    try:
+        data = request.get_json()
+        user = Users.query.filter_by(workday_id=workday_id).first()
+        
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        accessory = Accessories.query.get(data['accessory_id'])
+        
+        if not accessory:
+            return jsonify({'message': 'Accesorio no encontrado'}), 404
+        
+        user_accessory = UserAccessories(user_id=user.workday_id, accessory_id=accessory.id)
+        db.session.add(user_accessory)
+        db.session.commit()
+        
+        return jsonify(user_accessory.serialize())
+    except Exception as e:
+        return jsonify({'message': 'Error al asignar el accesorio al usuario', 'error': str(e)}), 500
+    
+@app.route('/api/v1.0/accessories/<string:workday_id>', methods=['DELETE'])
+def unassign_accessory_to_user(workday_id):
+    try:
+        data = request.get_json()
+        user = Users.query.filter_by(workday_id=workday_id).first()
+        
+        if not user:
+            return jsonify({'message': 'Usuario no encontrado'}), 404
+        
+        accessory = Accessories.query.get(data['accessory_id'])
+        
+        if not accessory:
+            return jsonify({'message': 'Accesorio no encontrado'}), 404
+        
+        user_accessory = UserAccessories.query.filter_by(user_id=user.workday_id, accessory_id=accessory.id).first()
+        
+        if not user_accessory:
+            return jsonify({'message': 'Accesorio no asignado al usuario'}), 404
+        
+        db.session.delete(user_accessory)
+        db.session.commit()
+        
+        return jsonify(user_accessory.serialize())
+    except Exception as e:
+        return jsonify({'message': 'Error al desasignar el accesorio al usuario', 'error': str(e)}), 500
     
 # Computadoras rutas
 @app.route('/api/v1.0/computadoras', methods=['GET'])

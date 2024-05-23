@@ -6,8 +6,8 @@ class UserAuth(db.Model):
     username = db.Column(db.String(255), nullable=False)
     password = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(255), default='user', nullable=False)
-    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
-    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
+    created_at = db.Column(db.DateTime, default=datetime.now)
+    updated_at = db.Column(db.DateTime, default=datetime.now, onupdate=datetime.now)
     
     
     def __init__(self, username, password, role, created_at, updated_at):
