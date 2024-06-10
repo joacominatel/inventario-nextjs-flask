@@ -3,7 +3,7 @@ import axios from "axios";
 import { motion } from "framer-motion";
 
 import Accesorio from "./Accesorio";
-import UserAccessoriesProps from "../interfaces/UserAccessories";
+import UserAccessoriesProps from "@/interfaces/UserAccessories";
 import AddAccessoryForm from "./AddAccessoryForm";
 
 interface UserAccessoriesProp {

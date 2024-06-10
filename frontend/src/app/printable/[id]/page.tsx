@@ -1,8 +1,8 @@
 "use client";
 import { useState, useEffect } from "react";
-import UserProps from "@/app/interfaces/UserProps";
-import UserAccessories from "@/app/interfaces/UserAccessories";
-import computadorasData from "@/app/interfaces/computadorasData";
+import UserProps from "@/interfaces/UserProps";
+import UserAccessories from "@/interfaces/UserAccessories";
+import computadorasData from "@/interfaces/computadorasData";
 import Swal from "sweetalert2";
 import axios from "axios";
 

@@ -142,7 +142,8 @@ def create_user():
                 nombre=data['nombre'],
                 apellido=data['apellido'],
                 mail=data['mail'],
-                usuario=data['usuario']
+                usuario=data['usuario'],
+                win11_installed=True
             )
             db.session.add(user)
             # print("4 user not exists")

@@ -1,14 +1,15 @@
 'use client';
-import { useState } from "react";
-import { useEffect } from "react";
-import User from "./components/User";
+import { useState, useEffect } from "react";
+import User from "@/components/User";
 import axios from "axios";
-import computadorasData from "./interfaces/computadorasData";
-import CreateUser from "./components/CreateUser";
+import computadorasData from "@/interfaces/computadorasData";
+import Link from "next/link";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLock, faUnlock } from "@fortawesome/free-solid-svg-icons";
+
 export default function Home() {
   const [search, setSearch] = useState("");
   const [users, setUsers] = useState<usersData[]>([]);
-  const [createFormDisplay, setCreateFormDisplay] = useState(false);
   const [searchActive, setSearchActive] = useState(() => {
       const storedValue = typeof window !== 'undefined' ? localStorage.getItem("searchActive") : null;
       return storedValue !==  null ? JSON.parse(storedValue) : true;
@@ -36,16 +37,7 @@ export default function Home() {
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setSearch(event.target.value);
-  }
-
-  function handleCreateFormDisplay() {
-    setCreateFormDisplay(!createFormDisplay);
-  }
-
-  // onclick #createUserForm close the form
-  function closeCreateForm() {
-    setCreateFormDisplay(false);
-  }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -106,11 +98,6 @@ export default function Home() {
   return (
     // Add a search bar to the page
     <section className="container mx-auto">
-      {createFormDisplay && 
-      <section className="h-full w-full bg-opacity-70 bg-black flex items-center justify-center flex-col fixed" id="createUserForm" onClick={closeCreateForm}>
-        <CreateUser />
-      </section>
-      }
       <div className="text-center mt-4 space-y-4">
         <form className="flex flex-row items-center justify-center space-x-4">
           <input
@@ -118,16 +105,15 @@ export default function Home() {
             value={search}
             onChange={handleSearchChange}
             id="search"
-            className="w-full p-4 rounded-lg shadow-md bg-gray-800 text-white focus:outline-none focus:ring focus:border-blue-300"
+            className="w-full p-4 rounded-lg shadow-md bg- gray-800 text-black focus:outline-none focus:ring focus:border-blue-300"
             placeholder="Buscar usuario por nombre, apellido, correo"
           />
-          <button
-            type="button"
-            onClick={handleCreateFormDisplay}
-            className="p-4 rounded-lg shadow-md bg-blue-500 text-white focus:outline-none focus:ring focus:border-blue-300"
+          <Link
+            className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center"
+            href="/create"
           >
             +
-          </button>
+          </Link>
           {/* checkbox to search on activated users or deactivated users */}
           <div className="flex justify-center items-center">
             <label htmlFor="searchActive" className="relative inline-flex items-center cursor-pointer">
@@ -138,7 +124,9 @@ export default function Home() {
                 onChange={() => setSearchActive(!searchActive)}
                 className="sr-only peer checked:bg-blue-500 checked:border-blue-500 checked:text-white checked:justify-end"
               />
-              <div className="peer rounded-br-2xl rounded-tl-2xl outline-none duration-100 after:duration-500 w-28 h-14 bg-blue-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-500  after:content-['No'] after:absolute after:outline-none after:rounded-br-xl after:rounded-tl-xl after:h-12 after:w-12 after:bg-white after:top-1 after:left-1 after:flex after:justify-center after:items-center  after:text-sky-800 after:font-bold peer-checked:after:translate-x-14 peer-checked:after:content-['Yes'] peer-checked:after:border-white">
+              {/* Icono de candado abierto */}
+              <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                {searchActive ? <FontAwesomeIcon icon={faLock} className="text-white" /> : <FontAwesomeIcon icon={faUnlock} className="text-white" />}
               </div>
             </label>
           </div>

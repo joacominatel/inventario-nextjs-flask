@@ -5,8 +5,8 @@ import { motion } from 'framer-motion';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import UserAccessories from './UserAccessories';
-import computadorasData from '../interfaces/computadorasData';
-import UserProps from '../interfaces/UserProps';
+import computadorasData from '@/interfaces/computadorasData';
+import UserProps from '@/interfaces/UserProps';
 
 const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workday_id, win11_installed, is_active, computadora, created_at, updated_at }) => {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
