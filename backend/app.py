@@ -468,6 +468,17 @@ def get_computer_by_user(workday_id):
     except:
         return jsonify({'message': 'Error al obtener la computadora'})
     
+@app.route('/api/v1.0/computadoras', methods=['POST'])
+def create_computer():
+    try:
+        data = request.get_json()
+        computer = Computadoras(**data)
+        db.session.add(computer)
+        db.session.commit()
+        return jsonify(computer.serialize())
+    except:
+        return jsonify({'message': 'Error al crear la computadora'})
+    
 # inicio de la app
 if __name__ == '__main__':
     app.run(debug=True, port=8010)
