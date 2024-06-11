@@ -16,6 +16,7 @@ class Users(db.Model):
     usuario = db.Column(db.String(100), unique=True, nullable=False)
     win11_installed = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    is_in_redmine = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, server_default=db.func.now())
     updated_at = db.Column(db.DateTime, server_default=db.func.now(), server_onupdate=db.func.now())
 
@@ -33,6 +34,7 @@ class Users(db.Model):
             'usuario': self.usuario,
             'win11_installed': self.win11_installed,
             'is_active': self.is_active,
+            'is_in_redmine': self.is_in_redmine,
             'created_at': self.created_at,
             'updated_at': self.updated_at
         }

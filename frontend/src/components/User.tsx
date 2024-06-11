@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash, faPrint } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faLock, faLockOpen, faEye, faArrowRight, faArrowLeft, faTrash, faPrint, faRssSquare } from '@fortawesome/free-solid-svg-icons';
 import { motion } from 'framer-motion';
 import axios from 'axios';
 import Swal from 'sweetalert2';
@@ -69,6 +69,10 @@ const User: React.FC<UserProps> = ({ id, nombre, apellido, mail, usuario, workda
             ...prevState,
             computadora: [...prevState.computadora, { id, marca: null, modelo: null, serie: null, created_at: null, updated_at: null }]
         }));
+    };
+
+    const checkIfUserRedmine = async (id: number) => {
+        console.log('Check user:' + id);
     };
 
     const userComputersIds = new Set(editedUser.computadora.map(comp => comp.id));

@@ -6,6 +6,7 @@ import computadorasData from "@/interfaces/computadorasData";
 import Link from "next/link";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLock, faUnlock } from "@fortawesome/free-solid-svg-icons";
+import RedmineButton from "@/components/buttons/RedmineButton";
 
 export default function Home() {
   const [search, setSearch] = useState("");
@@ -159,6 +160,7 @@ export default function Home() {
           </div>
         )}
       </div>
+      <RedmineButton />
     </section>
   );
 }
