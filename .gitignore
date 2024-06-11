@@ -208,3 +208,4 @@ excel/
 backup_accesorios/
 backup_users_borrados/
 .env.local
+.DS_Store

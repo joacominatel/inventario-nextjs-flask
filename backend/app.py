@@ -277,7 +277,7 @@ def update_user(id):
             existing_assignment = UserComputer.query.filter_by(computer_id=computadora_id).first()
             if existing_assignment and existing_assignment.user_id != id:
                 assigned_user = Users.query.get(existing_assignment.user_id)
-                return jsonify({'message': f'La computadora ya está asignada a otro usuario: {assigned_user.nombre}'}), 201
+                return jsonify({'message': f'La computadora ya está asignada a otro usuario: {assigned_user.apellido}'}), 201
             elif existing_assignment and existing_assignment.user_id == id:
                 # Si la computadora ya está asignada al usuario, solo agregar la computadora que NO está asignada
                 continue
@@ -472,10 +472,22 @@ def get_computer_by_user(workday_id):
 def create_computer():
     try:
         data = request.get_json()
-        computer = Computadoras(**data)
-        db.session.add(computer)
+        
+        marca = data.get('marca', '')
+        modelo = data.get('modelo', '')
+        serie = data.get('serie', '')
+
+        computadora = Computadoras.query.filter_by(serie=serie).first()
+
+        if computadora:
+            return jsonify({'message': 'La computadora ya existe'}), 400
+        
+        computadora = Computadoras(marca=marca, modelo=modelo, serie=serie)
+        db.session.add(computadora)
         db.session.commit()
-        return jsonify(computer.serialize())
+
+        print(f"Computadora creada: {computadora.serialize()}")
+        return jsonify(computadora.serialize())
     except:
         return jsonify({'message': 'Error al crear la computadora'})
     

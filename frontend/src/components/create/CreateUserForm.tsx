@@ -1,13 +1,11 @@
 "use client";
 import { useState } from "react";
 import axios from "axios";
-import UserProps from "@/interfaces/UserProps";
 import Swal from "sweetalert2";
 import Link from "next/link";
 
 export default function CreateUserForm() {
     const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8010";
-    const [user, setUser] = useState<UserProps>({} as UserProps);
     const [workday_id, setWorkdayId] = useState<string>("");
     const [nombre, setNombre] = useState<string>("");
     const [apellido, setApellido] = useState<string>("");
